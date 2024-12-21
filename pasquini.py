@@ -1,5 +1,7 @@
 import streamlit as st
 import requests
+from wordpress_xmlrpc import Client, WordPressPost
+from wordpress_xmlrpc.methods.posts import NewPost
 
 # Recupera la chiave API di Gemini dalla sezione secrets di Streamlit
 GEMINI_API_KEY = st.secrets["gembini"]["api_key"]
@@ -30,11 +32,16 @@ def generate_article_gemini(keywords):
 # Funzione per pubblicare su WordPress
 def publish_to_wordpress(title, content):
     try:
+        # Crea la connessione al sito WordPress
         wp = Client(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
+        
+        # Crea un nuovo post WordPress
         post = WordPressPost()
         post.title = title
         post.content = content
-        post.post_status = "publish"
+        post.post_status = "publish"  # Pubblica l'articolo immediatamente
+        
+        # Invia il post tramite la API XML-RPC
         wp.call(NewPost(post))
         st.success("Articolo pubblicato con successo!")
     except Exception as e:

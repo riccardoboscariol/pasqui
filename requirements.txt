@@ -1,4 +1,3 @@
-streamlit==1.26.0  # Assicurati di usare l'ultima versione compatibile
 requests==2.31.0   # Per effettuare richieste API
 python-wordpress-xmlrpc==2.3  # Per pubblicare su WordPress
 streamlit==1.26.0

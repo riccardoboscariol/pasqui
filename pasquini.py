@@ -3,8 +3,8 @@ import requests
 import os
 
 # Carica credenziali da variabili d'ambiente
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "INSERISCI_LA_TUA_API_KEY")
-WORDPRESS_URL = os.getenv("WORDPRESS_URL", "https://tuo-blog.com")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyBRQyys2g86Ah07B03KjURIedhgUZfFCZg")
+WORDPRESS_URL = os.getenv("WORDPRESS_URL", "https://www.psicoo.it/wp-json/")
 WORDPRESS_USER = os.getenv("WORDPRESS_USER", "Richi")
 WORDPRESS_PASSWORD = os.getenv("WORDPRESS_PASSWORD", "cazzone33082!")
 

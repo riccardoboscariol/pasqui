@@ -1,32 +1,28 @@
 import streamlit as st
 import requests
-from wordpress_xmlrpc import Client, WordPressPost
-from wordpress_xmlrpc.methods.posts import NewPost
 
-# Recupera i segreti da Streamlit
+# Recupera la chiave API di Gemini dalla sezione secrets di Streamlit
 GEMINI_API_KEY = st.secrets["gembini"]["api_key"]
-WORDPRESS_URL = st.secrets["wordpress"]["url"]
-WORDPRESS_USER = st.secrets["wordpress"]["username"]
-WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini(keywords):
-    prompt = f"""
-    Genera un articolo di alta qualità basato sulle parole chiave: {keywords}.
-    Assicurati che l'articolo sia informativo, ben scritto e adatto a un pubblico ampio.
-    Includi uno stile professionale e ottimizza per SEO.
-    """
-    headers = {"Authorization": f"Bearer {GEMINI_API_KEY}", "Content-Type": "application/json"}
+    prompt = f"Genera un articolo di alta qualità basato sulle parole chiave: {keywords}. Assicurati che l'articolo sia informativo, ben scritto e ottimizzato per SEO."
+
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+    headers = {"Content-Type": "application/json"}
     data = {
-        "prompt": prompt,
-        "max_tokens": 2000,
-        "temperature": 0.7,  # Aggiungi un parametro per controllare la creatività
-        "top_p": 0.9  # Parametro opzionale per ridurre risposte incoerenti
+        "contents": [
+            {
+                "parts": [{"text": prompt}]
+            }
+        ]
     }
-    response = requests.post("https://gemini.googleapis.com/v1beta/models/text:generate", headers=headers, json=data)
-    
+
+    response = requests.post(url, headers=headers, json=data)
+
     if response.status_code == 200:
-        return response.json().get("text", "Errore: Nessun testo generato dalla risposta.")
+        return response.json().get("content", "Errore: Nessun testo generato dalla risposta.")
     else:
         st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
         return ""
@@ -57,4 +53,5 @@ if st.button("Genera e Pubblica Articolo"):
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
+
 

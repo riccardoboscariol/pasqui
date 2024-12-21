@@ -1,13 +1,12 @@
 import streamlit as st
 import requests
-from wordpress_xmlrpc import Client, WordPressPost
-from wordpress_xmlrpc.methods.posts import NewPost
+import os
 
-# Configura API
-GEMINI_API_KEY = "AIzaSyBRQyys2g86Ah07B03KjURIedhgUZfFCZg"
-WORDPRESS_URL = "https://tuo-blog.com/xmlrpc.php"
-WORDPRESS_USER = "Richi"  # Nome utente fornito
-WORDPRESS_PASSWORD = "cazzone33082!"  # Password fornita
+# Carica credenziali da variabili d'ambiente
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "INSERISCI_LA_TUA_API_KEY")
+WORDPRESS_URL = os.getenv("WORDPRESS_URL", "https://tuo-blog.com")
+WORDPRESS_USER = os.getenv("WORDPRESS_USER", "Richi")
+WORDPRESS_PASSWORD = os.getenv("WORDPRESS_PASSWORD", "cazzone33082!")
 
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini(keywords):
@@ -20,36 +19,51 @@ def generate_article_gemini(keywords):
     data = {
         "prompt": prompt,
         "max_tokens": 2000,
-        "temperature": 0.7,  # Aggiungi un parametro per controllare la creatività
-        "top_p": 0.9  # Parametro opzionale per ridurre risposte incoerenti
+        "temperature": 0.7,  # Creatività moderata
+        "top_p": 0.9  # Riduce le risposte incoerenti
     }
-    response = requests.post("https://gemini.googleapis.com/v1beta/models/text:generate", headers=headers, json=data)
-    
-    if response.status_code == 200:
-        return response.json().get("text", "Errore: Nessun testo generato dalla risposta.")
-    else:
-        st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
+    try:
+        response = requests.post(
+            "https://gemini.googleapis.com/v1beta/models/text:generate",
+            headers=headers,
+            json=data
+        )
+        if response.status_code == 200:
+            return response.json().get("text", "Errore: Nessun testo generato dalla risposta.")
+        else:
+            st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
+            return ""
+    except Exception as e:
+        st.error(f"Errore durante la comunicazione con l'API Gemini: {e}")
         return ""
 
-# Funzione per pubblicare su WordPress
+# Funzione per pubblicare su WordPress usando REST API
 def publish_to_wordpress(title, content):
+    url = f"{WORDPRESS_URL}/wp-json/wp/v2/posts"
+    headers = {
+        "Authorization": f"Basic {requests.auth._basic_auth_str(WORDPRESS_USER, WORDPRESS_PASSWORD)}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "title": title,
+        "content": content,
+        "status": "publish"  # Pubblica immediatamente
+    }
     try:
-        wp = Client(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
-        post = WordPressPost()
-        post.title = title
-        post.content = content
-        post.post_status = "publish"
-        wp.call(NewPost(post))
-        st.success("Articolo pubblicato con successo!")
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 201:
+            st.success("Articolo pubblicato con successo!")
+        else:
+            st.error(f"Errore durante la pubblicazione su WordPress: {response.status_code} - {response.text}")
     except Exception as e:
-        st.error(f"Errore durante la pubblicazione su WordPress: {e}")
+        st.error(f"Errore durante la comunicazione con WordPress: {e}")
 
-# Streamlit UI
+# Interfaccia Streamlit
 st.title("Generatore di articoli con Gemini AI")
-keywords = st.text_input("Inserisci le parole chiave")
+keywords = st.text_input("Inserisci le parole chiave per l'articolo")
 
 if st.button("Genera e Pubblica Articolo"):
-    if keywords.strip():  # Verifica che le parole chiave non siano vuote
+    if keywords.strip():
         st.info("Generazione dell'articolo in corso...")
         article_content = generate_article_gemini(keywords)
         if article_content:
@@ -57,3 +71,4 @@ if st.button("Genera e Pubblica Articolo"):
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
+

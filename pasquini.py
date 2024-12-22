@@ -11,7 +11,8 @@ WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini(keywords):
-    prompt = f"prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO, e privo di simboli superflui come asterischi, segni, hashtag o markdown. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili.""
+    # Correzione: rimuoviamo l'errore di annidamento delle stringhe
+    prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO, e privo di simboli superflui come asterischi, segni, hashtag o markdown. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili."
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 

@@ -11,7 +11,7 @@ WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini(keywords):
-    prompt = f"Genera un articolo di alta qualità basato sulle parole chiave: {keywords}. Assicurati che l'articolo sia informativo, ben scritto e ottimizzato per SEO."
+    prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO e privo di simboli superflui come asterischi o segni. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto."
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
 
@@ -28,7 +28,6 @@ def generate_article_gemini(keywords):
 
     if response.status_code == 200:
         try:
-            # Estrai il testo generato dalla risposta JSON
             content = response.json()["candidates"][0]["content"]["parts"][0]["text"]
             if content.strip():
                 return content
@@ -74,8 +73,9 @@ if st.button("Genera e Pubblica Articolo"):
         article_content = generate_article_gemini(keywords)
         st.write("Contenuto generato:", article_content)  # Debug
         if article_content:
-            title = f"Articolo su {keywords.capitalize()}"
+            title = keywords.capitalize()  # Usa le parole chiave come titolo
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
+
 

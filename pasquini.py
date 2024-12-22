@@ -3,7 +3,7 @@ import requests
 from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
-# Recupera le chiavi API e credenziali da Streamlit secrets
+# Recupera le informazioni dalle secrets di Streamlit
 GEMINI_API_KEY = st.secrets["gembini"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
@@ -26,14 +26,26 @@ def generate_article_gemini(keywords):
 
     response = requests.post(url, headers=headers, json=data)
 
+    # Debug: Log della risposta dell'API
+    st.write("Risposta API Gemini:", response.json())
+
     if response.status_code == 200:
-        return response.json().get("content", "Errore: Nessun testo generato dalla risposta.")
+        content = response.json().get("content", "")
+        if content.strip():
+            return content
+        else:
+            st.error("Errore: L'API ha risposto ma non ha generato contenuto.")
+            return ""
     else:
         st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
         return ""
 
 # Funzione per pubblicare su WordPress
 def publish_to_wordpress(title, content):
+    if not content.strip():
+        st.error("Errore: Il contenuto dell'articolo è vuoto. Verifica la generazione dell'articolo.")
+        return
+
     try:
         # Crea la connessione al sito WordPress
         wp = Client(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
@@ -58,9 +70,9 @@ if st.button("Genera e Pubblica Articolo"):
     if keywords.strip():  # Verifica che le parole chiave non siano vuote
         st.info("Generazione dell'articolo in corso...")
         article_content = generate_article_gemini(keywords)
+        st.write("Contenuto generato:", article_content)  # Debug
         if article_content:
             title = f"Articolo su {keywords.capitalize()}"
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
-

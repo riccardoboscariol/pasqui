@@ -4,31 +4,34 @@ from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
 # Recupera le informazioni dalle secrets di Streamlit
-GEMINI_API_KEY = st.secrets["gemini"]["api_key"]
+CLAUDE_API_KEY = st.secrets["claude"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
-# Funzione per generare l'articolo con Gemini
-def generate_article_gemini(keywords):
+# Funzione per generare l'articolo con Claude AI
+def generate_article_claude(keywords):
     prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO, e privo di simboli superflui come asterischi, segni, hashtag o markdown. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili."
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
-
-    headers = {"Content-Type": "application/json"}
+    url = "https://api.anthropic.com/v1/completions"  # Endpoint per Claude (assumendo che questa sia la corretta)
+    
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {CLAUDE_API_KEY}"
+    }
+    
     data = {
-        "contents": [
-            {
-                "parts": [{"text": prompt}]
-            }
-        ]
+        "model": "claude-1",  # Assumendo che "claude-1" sia il nome del modello, sostituiscilo con il nome corretto se necessario
+        "prompt": prompt,
+        "max_tokens": 1000,  # Regola questo parametro in base alla lunghezza dell'articolo
+        "temperature": 0.7  # Puoi modificare la temperatura per variare la creatività dell'output
     }
 
     response = requests.post(url, headers=headers, json=data)
 
     if response.status_code == 200:
         try:
-            content = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            content = response.json()["completion"]
             if content.strip():
                 return content
             else:
@@ -80,13 +83,13 @@ def publish_to_wordpress(title, content):
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
 # Streamlit UI
-st.title("Generatore di articoli con Gemini AI")
+st.title("Generatore di articoli con Claude AI")
 keywords = st.text_input("Inserisci le parole chiave")
 
 if st.button("Genera e Pubblica Articolo"):
     if keywords.strip():  # Verifica che le parole chiave non siano vuote
         st.info("Generazione dell'articolo in corso...")
-        article_content = generate_article_gemini(keywords)
+        article_content = generate_article_claude(keywords)
         st.write("Contenuto generato:", article_content)  # Debug
         if article_content:
             # Formattiamo il contenuto prima di inviarlo
@@ -96,5 +99,4 @@ if st.button("Genera e Pubblica Articolo"):
             publish_to_wordpress(title, formatted_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
-
 

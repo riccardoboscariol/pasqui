@@ -26,15 +26,17 @@ def generate_article_gemini(keywords):
 
     response = requests.post(url, headers=headers, json=data)
 
-    # Debug: Log della risposta dell'API
-    st.write("Risposta API Gemini:", response.json())
-
     if response.status_code == 200:
-        content = response.json().get("content", "")
-        if content.strip():
-            return content
-        else:
-            st.error("Errore: L'API ha risposto ma non ha generato contenuto.")
+        try:
+            # Estrai il testo generato dalla risposta JSON
+            content = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+            if content.strip():
+                return content
+            else:
+                st.error("Errore: L'API ha risposto ma non ha generato contenuto.")
+                return ""
+        except KeyError:
+            st.error("Errore: Struttura della risposta dell'API non valida.")
             return ""
     else:
         st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
@@ -76,3 +78,4 @@ if st.button("Genera e Pubblica Articolo"):
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
+

@@ -43,10 +43,18 @@ def generate_article_gemini(keywords):
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
+    # Aggiungi formattazione per i titoli (ad esempio, righe che cominciano con "Titolo" o "Sezione")
+    content = content.replace("\nTitolo", "<h2>").replace("Titolo", "</h2>")
+    content = content.replace("\nSezione", "<h3>").replace("Sezione", "</h3>")
+
     # Esegui una serie di sostituzioni per aggiungere la formattazione
     content = content.replace("*", "<b>").replace("*", "</b>")  # Sostituire *con <b> per grassetto
     content = content.replace("_", "<i>").replace("_", "</i>")  # Sostituire _ con <i> per corsivo
     content = content.replace("~", "<u>").replace("~", "</u>")  # Sostituire ~ con <u> per sottolineato
+
+    # Aggiungi uno spazio tra le righe per i paragrafi
+    content = content.replace("\n", "<br>")  # Aggiunge <br> per i ritorni a capo
+
     return content
 
 # Funzione per pubblicare su WordPress

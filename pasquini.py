@@ -11,7 +11,6 @@ WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini(keywords):
-    # Correzione: rimuoviamo l'errore di annidamento delle stringhe
     prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO, e privo di simboli superflui come asterischi, segni, hashtag o markdown. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili."
 
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
@@ -42,6 +41,14 @@ def generate_article_gemini(keywords):
         st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
         return ""
 
+# Funzione per applicare la formattazione HTML
+def format_content(content):
+    # Esegui una serie di sostituzioni per aggiungere la formattazione
+    content = content.replace("*", "<b>").replace("*", "</b>")  # Sostituire *con <b> per grassetto
+    content = content.replace("_", "<i>").replace("_", "</i>")  # Sostituire _ con <i> per corsivo
+    content = content.replace("~", "<u>").replace("~", "</u>")  # Sostituire ~ con <u> per sottolineato
+    return content
+
 # Funzione per pubblicare su WordPress
 def publish_to_wordpress(title, content):
     if not content.strip():
@@ -55,7 +62,7 @@ def publish_to_wordpress(title, content):
         # Crea un nuovo post WordPress
         post = WordPressPost()
         post.title = title
-        post.content = content
+        post.content = content  # Il contenuto che contiene già HTML
         post.post_status = "publish"  # Pubblica l'articolo immediatamente
         
         # Invia il post tramite la API XML-RPC
@@ -74,10 +81,12 @@ if st.button("Genera e Pubblica Articolo"):
         article_content = generate_article_gemini(keywords)
         st.write("Contenuto generato:", article_content)  # Debug
         if article_content:
+            # Formattiamo il contenuto prima di inviarlo
+            formatted_content = format_content(article_content)
             title = keywords.capitalize()  # Usa le parole chiave come titolo, ma personalizzato se necessario
-            # Titolo personalizzato se necessario
             title = title.replace("Articolo su", "").strip()  # Rimuove "Articolo su" se presente
-            publish_to_wordpress(title, article_content)
+            publish_to_wordpress(title, formatted_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
+
 

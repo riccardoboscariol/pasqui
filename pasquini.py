@@ -1,5 +1,5 @@
 import streamlit as st
-import requests
+import anthropic
 from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
@@ -9,39 +9,39 @@ WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
+# Inizializza il client di Claude
+client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude(keywords):
     prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO, e privo di simboli superflui come asterischi, segni, hashtag o markdown. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili."
 
-    url = "https://api.anthropic.com/v1/completions"  # Endpoint per Claude (assumendo che questa sia la corretta)
-    
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {CLAUDE_API_KEY}"
-    }
-    
-    data = {
-        "model": "claude-1",  # Assumendo che "claude-1" sia il nome del modello, sostituiscilo con il nome corretto se necessario
-        "prompt": prompt,
-        "max_tokens": 1000,  # Regola questo parametro in base alla lunghezza dell'articolo
-        "temperature": 0.7  # Puoi modificare la temperatura per variare la creatività dell'output
-    }
+    try:
+        # Creazione di un batch di richieste con Claude
+        message_batch = client.beta.messages.batches.create(
+            requests=[
+                {
+                    "custom_id": "article-prompt",
+                    "params": {
+                        "model": "claude-3-5-haiku-20241022",  # Modello di Claude, modificabile
+                        "max_tokens": 1000,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": prompt,
+                            }
+                        ],
+                    },
+                }
+            ]
+        )
 
-    response = requests.post(url, headers=headers, json=data)
+        # Estrai il contenuto dalla risposta
+        response = message_batch['results'][0]['response']['text']
+        return response
 
-    if response.status_code == 200:
-        try:
-            content = response.json()["completion"]
-            if content.strip():
-                return content
-            else:
-                st.error("Errore: L'API ha risposto ma non ha generato contenuto.")
-                return ""
-        except KeyError:
-            st.error("Errore: Struttura della risposta dell'API non valida.")
-            return ""
-    else:
-        st.error(f"Errore durante la generazione dell'articolo: {response.status_code} - {response.text}")
+    except Exception as e:
+        st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
 
 # Funzione per applicare la formattazione HTML

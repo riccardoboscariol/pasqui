@@ -4,7 +4,7 @@ from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
 # Recupera le informazioni dalle secrets di Streamlit
-GEMINI_API_KEY = st.secrets["gembini"]["api_key"]
+GEMINI_API_KEY = st.secrets["gemini"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
@@ -73,9 +73,10 @@ if st.button("Genera e Pubblica Articolo"):
         article_content = generate_article_gemini(keywords)
         st.write("Contenuto generato:", article_content)  # Debug
         if article_content:
-            title = keywords.capitalize()  # Usa le parole chiave come titolo
+            title = keywords.capitalize()  # Usa le parole chiave come titolo, ma personalizzato se necessario
+            # Titolo personalizzato se necessario
+            title = title.replace("Articolo su", "").strip()  # Rimuove "Articolo su" se presente
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
-
 

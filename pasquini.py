@@ -3,8 +3,11 @@ import requests
 from wordpress_xmlrpc import Client, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
-# Recupera la chiave API di Gemini dalla sezione secrets di Streamlit
+# Recupera le chiavi API e credenziali da Streamlit secrets
 GEMINI_API_KEY = st.secrets["gembini"]["api_key"]
+WORDPRESS_URL = st.secrets["wordpress"]["url"]
+WORDPRESS_USER = st.secrets["wordpress"]["username"]
+WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini(keywords):
@@ -60,5 +63,4 @@ if st.button("Genera e Pubblica Articolo"):
             publish_to_wordpress(title, article_content)
     else:
         st.warning("Inserisci delle parole chiave valide!")
-
 

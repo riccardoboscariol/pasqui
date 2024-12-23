@@ -24,15 +24,15 @@ def generate_article_claude():
     )
 
     try:
-        # Creazione di una richiesta a Claude con i parametri richiesti
-        response = claude_client.completion(
+        # Creazione di una richiesta a Claude con il metodo corretto
+        response = claude_client.completions.create(
             model="claude-2",  # Usa il modello corretto
-            prompt=f"{anthropic.HUMAN_PROMPT} {prompt}{anthropic.AI_PROMPT}",
-            max_tokens_to_sample=3000,  # Numero massimo di token da generare
+            prompt=prompt,     # Il prompt che fornisci per generare l'articolo
+            max_tokens=3000    # Numero massimo di token da generare
         )
 
         # Estrai il contenuto dalla risposta
-        return response.get("completion", "")
+        return response["completion"]
 
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
@@ -71,5 +71,6 @@ if st.button("Genera e Pubblica Guida"):
         formatted_content = format_content(guide_content)
         title = "Guida psicologica basata su fonti affidabili"
         publish_to_wordpress(title, formatted_content)
+
 
 

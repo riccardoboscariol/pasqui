@@ -15,14 +15,15 @@ claude_client = Client(api_key=CLAUDE_API_KEY)
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
-        "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
-        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
-        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
-        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
-        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
-        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
-        "\n\nAssistant:"
-    )
+    "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+    "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+    "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+    "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
+    "L'articolo deve trattare un argomento psicologico generico in modo informativo, senza fornire consigli clinici diretti. "
+    "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
+    "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
+    "\n\nAssistant:"
+)
 
     try:
         # Creazione di una richiesta a Claude con il metodo corretto

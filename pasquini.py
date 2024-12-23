@@ -15,7 +15,7 @@ claude_client = Client(api_key=CLAUDE_API_KEY)
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
-    "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+    "\n\nHuman: Scrivi una guida di almeno 1000 parole con questo stile: "
     "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
     "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
     "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "

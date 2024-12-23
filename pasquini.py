@@ -15,11 +15,13 @@ claude_client = Client(api_key=CLAUDE_API_KEY)
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
-        "\n\nHuman: Scrivi una guida di circa 500 parole per aiutare le persone a gestire lo stress in modo sano e costruttivo. "
-        "Dovresti includere tecniche di rilassamento, approcci psicologici utili e pratici suggerimenti da applicare nella vita quotidiana. "
-        "Il tono dovrebbe essere professionale ma accessibile, con alcuni esempi pratici di come queste tecniche possono essere messe in pratica, "
-        "senza includere simboli inutili e seguendo le linee guida etiche."
-        "\n\nAssistant:"
+        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
+        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
+        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
+        "\n\nAssistant: "
     )
 
     try:
@@ -27,7 +29,7 @@ def generate_article_claude():
         response = claude_client.completions.create(
             model="claude-2",  # Modello corretto
             prompt=prompt,     # Il prompt che fornisci per generare l'articolo
-            max_tokens_to_sample=1000,    # Numero massimo di token da generare
+            max_tokens_to_sample=2000,    # Numero massimo di token da generare
         )
 
         # Debug: Stampa l'intera risposta per capire la sua struttura
@@ -77,5 +79,6 @@ if st.button("Genera e Pubblica Guida"):
         formatted_content = format_content(guide_content)
         title = "Guida alla gestione dello stress"
         publish_to_wordpress(title, formatted_content)
+
 
 

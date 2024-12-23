@@ -26,9 +26,9 @@ def generate_article_claude():
     try:
         # Creazione di una richiesta a Claude con il metodo corretto
         response = claude_client.completions.create(
-            model="claude-2",  # Usa il modello corretto
+            model="claude-2",  # Modello corretto
             prompt=prompt,     # Il prompt che fornisci per generare l'articolo
-            max_tokens=3000    # Numero massimo di token da generare
+            max_tokens_to_sample=3000,    # Numero massimo di token da generare
         )
 
         # Estrai il contenuto dalla risposta
@@ -71,6 +71,7 @@ if st.button("Genera e Pubblica Guida"):
         formatted_content = format_content(guide_content)
         title = "Guida psicologica basata su fonti affidabili"
         publish_to_wordpress(title, formatted_content)
+
 
 
 

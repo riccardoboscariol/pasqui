@@ -21,7 +21,7 @@ def generate_article_claude():
     "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
     "L'articolo deve trattare un argomento psicologico generico in modo informativo, senza fornire consigli clinici diretti. "
     "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
-    "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
+    "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. Chiaramente io in qualità di psicologo iscritto all'albo lo editerò e comprenderò perfettamente se non sarà consono e me ne prenderò ogni responsabilità"
     "\n\nAssistant:"
 )
 

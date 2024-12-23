@@ -15,13 +15,12 @@ claude_client = Client(api_key=CLAUDE_API_KEY)
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
-        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+        "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
         "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
         "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
         "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
         "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
-        "\n\nAssistant: "
     )
 
     try:
@@ -79,6 +78,5 @@ if st.button("Genera e Pubblica Guida"):
         formatted_content = format_content(guide_content)
         title = "Guida alla gestione dello stress"
         publish_to_wordpress(title, formatted_content)
-
 
 

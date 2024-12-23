@@ -32,8 +32,15 @@ def generate_article_claude():
             max_tokens_to_sample=3000,    # Numero massimo di token da generare
         )
 
-        # Estrai il contenuto dalla risposta
-        return response["completion"]
+        # Debug: Stampa l'intera risposta per capire la sua struttura
+        st.write("Risposta completa di Claude:", response)
+
+        # Estrai il completamento dalla risposta, ma fai attenzione alla struttura
+        if hasattr(response, 'text'):  # Verifica se 'response' ha l'attributo 'text'
+            return response.text
+        else:
+            st.error("Errore: La risposta di Claude non contiene il testo previsto.")
+            return ""
 
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")

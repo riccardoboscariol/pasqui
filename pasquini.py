@@ -1,6 +1,6 @@
 import streamlit as st
-import anthropic
-from wordpress_xmlrpc import Client, WordPressPost
+from anthropic import Client
+from wordpress_xmlrpc import Client as WPClient, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
 # Recupera le informazioni dalle secrets di Streamlit
@@ -10,7 +10,7 @@ WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Inizializza il client di Claude
-client = anthropic.Client(api_key=CLAUDE_API_KEY)
+claude_client = Client(api_key=CLAUDE_API_KEY)
 
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
@@ -25,8 +25,8 @@ def generate_article_claude():
 
     try:
         # Creazione di una richiesta a Claude con i parametri richiesti
-        response = client.completion(
-            model="claude-2",  # Usa il modello corretto (Claude-2 o Claude-3, verifica quale è disponibile)
+        response = claude_client.completion(
+            model="claude-2",  # Usa il modello corretto
             prompt=f"{anthropic.HUMAN_PROMPT} {prompt}{anthropic.AI_PROMPT}",
             max_tokens_to_sample=3000,  # Numero massimo di token da generare
         )
@@ -50,7 +50,7 @@ def publish_to_wordpress(title, content):
         return
 
     try:
-        wp = Client(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
+        wp = WPClient(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
         post = WordPressPost()
         post.title = title
         post.content = content

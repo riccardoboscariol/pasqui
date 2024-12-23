@@ -43,8 +43,8 @@ def generate_article_claude():
             ]
         )
 
-        # Estrai il contenuto dalla risposta
-        response = message_batch['results'][0]['response']['text']
+        # Estrai il contenuto dalla risposta correttamente
+        response = message_batch.responses[0].get("text", "")
         return response
 
     except Exception as e:

@@ -13,18 +13,25 @@ WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
 
 # Funzione per generare l'articolo con Claude AI
-def generate_article_claude(keywords):
-    prompt = f"Genera un articolo ben scritto e informativo basato sulle parole chiave: {keywords}. L'articolo deve essere leggibile, ottimizzato per SEO, e privo di simboli superflui come asterischi, segni, hashtag o markdown. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili."
+def generate_article_claude():
+    prompt = (
+        "Scrivi una guida di almeno 3000 parole come se fossi uno psicologo con questo stile: "
+        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
+        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
+        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
+    )
 
     try:
         # Creazione di un batch di richieste con Claude
         message_batch = client.beta.messages.batches.create(
             requests=[
                 {
-                    "custom_id": "article-prompt",
+                    "custom_id": "guide-prompt",
                     "params": {
                         "model": "claude-3-5-haiku-20241022",  # Modello di Claude, modificabile
-                        "max_tokens": 1000,
+                        "max_tokens": 3000,
                         "messages": [
                             {
                                 "role": "user",
@@ -46,16 +53,12 @@ def generate_article_claude(keywords):
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
-    # Aggiungi formattazione per i titoli (ad esempio, righe che cominciano con "Titolo" o "Sezione")
+    # Esegui una serie di sostituzioni per aggiungere la formattazione
     content = content.replace("\nTitolo", "<h2>").replace("Titolo", "</h2>")
     content = content.replace("\nSezione", "<h3>").replace("Sezione", "</h3>")
-
-    # Esegui una serie di sostituzioni per aggiungere la formattazione
-    content = content.replace("*", "<b>").replace("*", "</b>")  # Sostituire *con <b> per grassetto
-    content = content.replace("_", "<i>").replace("_", "</i>")  # Sostituire _ con <i> per corsivo
-    content = content.replace("~", "<u>").replace("~", "</u>")  # Sostituire ~ con <u> per sottolineato
-
-    # Aggiungi uno spazio tra le righe per i paragrafi
+    content = content.replace("*", "<b>").replace("*", "</b>")
+    content = content.replace("_", "<i>").replace("_", "</i>")
+    content = content.replace("~", "<u>").replace("~", "</u>")
     content = content.replace("\n", "<br>")  # Aggiunge <br> per i ritorni a capo
 
     return content
@@ -69,13 +72,13 @@ def publish_to_wordpress(title, content):
     try:
         # Crea la connessione al sito WordPress
         wp = Client(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
-        
+
         # Crea un nuovo post WordPress
         post = WordPressPost()
         post.title = title
         post.content = content  # Il contenuto che contiene già HTML
         post.post_status = "publish"  # Pubblica l'articolo immediatamente
-        
+
         # Invia il post tramite la API XML-RPC
         wp.call(NewPost(post))
         st.success("Articolo pubblicato con successo!")
@@ -83,20 +86,16 @@ def publish_to_wordpress(title, content):
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
 # Streamlit UI
-st.title("Generatore di articoli con Claude AI")
-keywords = st.text_input("Inserisci le parole chiave")
+st.title("Generatore di guide con Claude AI")
 
-if st.button("Genera e Pubblica Articolo"):
-    if keywords.strip():  # Verifica che le parole chiave non siano vuote
-        st.info("Generazione dell'articolo in corso...")
-        article_content = generate_article_claude(keywords)
-        st.write("Contenuto generato:", article_content)  # Debug
-        if article_content:
-            # Formattiamo il contenuto prima di inviarlo
-            formatted_content = format_content(article_content)
-            title = keywords.capitalize()  # Usa le parole chiave come titolo, ma personalizzato se necessario
-            title = title.replace("Articolo su", "").strip()  # Rimuove "Articolo su" se presente
-            publish_to_wordpress(title, formatted_content)
-    else:
-        st.warning("Inserisci delle parole chiave valide!")
+if st.button("Genera e Pubblica Guida"):
+    st.info("Generazione della guida in corso...")
+    guide_content = generate_article_claude()
+    st.write("Contenuto generato:", guide_content)  # Debug
+    if guide_content:
+        # Formattiamo il contenuto prima di inviarlo
+        formatted_content = format_content(guide_content)
+        title = "Guida psicologica basata su fonti affidabili"  # Titolo generico per l'articolo
+        publish_to_wordpress(title, formatted_content)
+
 

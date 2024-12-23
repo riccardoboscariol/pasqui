@@ -21,6 +21,7 @@ def generate_article_claude():
         "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
         "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
         "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
+        "\n\nAssistant:"
     )
 
     try:
@@ -78,5 +79,4 @@ if st.button("Genera e Pubblica Guida"):
         formatted_content = format_content(guide_content)
         title = "Guida alla gestione dello stress"
         publish_to_wordpress(title, formatted_content)
-
 

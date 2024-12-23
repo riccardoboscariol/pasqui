@@ -10,7 +10,7 @@ WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Inizializza il client di Claude
-client = anthropic.Anthropic(api_key=CLAUDE_API_KEY)
+client = anthropic.Client(api_key=CLAUDE_API_KEY)
 
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
@@ -24,11 +24,11 @@ def generate_article_claude():
     )
 
     try:
-        # Creazione di una richiesta singola a Claude
-        response = client.completions.create(
-            model="claude-3-5-haiku-20241022",  # Modello di Claude, modificabile
-            max_tokens=3000,
-            prompt=prompt,
+        # Creazione di una richiesta a Claude con i parametri richiesti
+        response = client.completion(
+            model="claude-2",  # Usa il modello corretto (Claude-2 o Claude-3, verifica quale è disponibile)
+            prompt=f"{anthropic.HUMAN_PROMPT} {prompt}{anthropic.AI_PROMPT}",
+            max_tokens_to_sample=3000,  # Numero massimo di token da generare
         )
 
         # Estrai il contenuto dalla risposta
@@ -71,4 +71,5 @@ if st.button("Genera e Pubblica Guida"):
         formatted_content = format_content(guide_content)
         title = "Guida psicologica basata su fonti affidabili"
         publish_to_wordpress(title, formatted_content)
+
 

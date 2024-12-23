@@ -24,28 +24,15 @@ def generate_article_claude():
     )
 
     try:
-        # Creazione di un batch di richieste con Claude
-        message_batch = client.beta.messages.batches.create(
-            requests=[
-                {
-                    "custom_id": "guide-prompt",
-                    "params": {
-                        "model": "claude-3-5-haiku-20241022",  # Modello di Claude, modificabile
-                        "max_tokens": 3000,
-                        "messages": [
-                            {
-                                "role": "user",
-                                "content": prompt,
-                            }
-                        ],
-                    },
-                }
-            ]
+        # Creazione di una richiesta singola a Claude
+        response = client.completions.create(
+            model="claude-3-5-haiku-20241022",  # Modello di Claude, modificabile
+            max_tokens=3000,
+            prompt=prompt,
         )
 
-        # Estrai il contenuto dalla risposta correttamente
-        response = message_batch.responses[0].get("text", "")
-        return response
+        # Estrai il contenuto dalla risposta
+        return response.get("completion", "")
 
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
@@ -53,14 +40,7 @@ def generate_article_claude():
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
-    # Esegui una serie di sostituzioni per aggiungere la formattazione
-    content = content.replace("\nTitolo", "<h2>").replace("Titolo", "</h2>")
-    content = content.replace("\nSezione", "<h3>").replace("Sezione", "</h3>")
-    content = content.replace("*", "<b>").replace("*", "</b>")
-    content = content.replace("_", "<i>").replace("_", "</i>")
-    content = content.replace("~", "<u>").replace("~", "</u>")
-    content = content.replace("\n", "<br>")  # Aggiunge <br> per i ritorni a capo
-
+    content = content.replace("\n", "<br>")
     return content
 
 # Funzione per pubblicare su WordPress
@@ -70,16 +50,11 @@ def publish_to_wordpress(title, content):
         return
 
     try:
-        # Crea la connessione al sito WordPress
         wp = Client(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
-
-        # Crea un nuovo post WordPress
         post = WordPressPost()
         post.title = title
-        post.content = content  # Il contenuto che contiene già HTML
-        post.post_status = "publish"  # Pubblica l'articolo immediatamente
-
-        # Invia il post tramite la API XML-RPC
+        post.content = content
+        post.post_status = "publish"
         wp.call(NewPost(post))
         st.success("Articolo pubblicato con successo!")
     except Exception as e:
@@ -93,9 +68,7 @@ if st.button("Genera e Pubblica Guida"):
     guide_content = generate_article_claude()
     st.write("Contenuto generato:", guide_content)  # Debug
     if guide_content:
-        # Formattiamo il contenuto prima di inviarlo
         formatted_content = format_content(guide_content)
-        title = "Guida psicologica basata su fonti affidabili"  # Titolo generico per l'articolo
+        title = "Guida psicologica basata su fonti affidabili"
         publish_to_wordpress(title, formatted_content)
-
 

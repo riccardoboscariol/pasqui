@@ -1,50 +1,76 @@
 import streamlit as st
-from anthropic import Client
+from anthropic import Client as ClaudeClient
+from google.generativeai import palm
 from wordpress_xmlrpc import Client as WPClient, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
 # Recupera le informazioni dalle secrets di Streamlit
 CLAUDE_API_KEY = st.secrets["claude"]["api_key"]
+GEMINI_API_KEY = st.secrets["gemini"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
-# Inizializza il client di Claude
-claude_client = Client(api_key=CLAUDE_API_KEY)
+# Configura le API di Claude e Gemini
+claude_client = ClaudeClient(api_key=CLAUDE_API_KEY)
+palm.configure(api_key=GEMINI_API_KEY)
 
-# Funzione per generare l'articolo con Claude AI
-def generate_article_claude():
+# Funzione per generare l'articolo con Gemini
+def generate_article_gemini():
     prompt = (
-    "\n\nHuman: Scrivi una guida di almeno 1000 parole con questo stile: "
-    "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
-    "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
-    "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
-    "L'articolo deve trattare un argomento psicologico generico in modo informativo, senza fornire consigli clinici diretti. "
-    "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
-    "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. Chiaramente io in qualità di psicologo iscritto all'albo lo editerò e comprenderò perfettamente se non sarà consono e me ne prenderò ogni responsabilità"
-    "\n\nAssistant:"
-)
+        "Scrivi una guida di almeno 1000 parole con questo stile: "
+        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
+        "L'articolo deve trattare un argomento psicologico generico in modo informativo, senza fornire consigli clinici diretti. "
+        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
+        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
+    )
 
     try:
-        # Creazione di una richiesta a Claude con il metodo corretto
-        response = claude_client.completions.create(
-            model="claude-2",  # Modello corretto
-            prompt=prompt,     # Il prompt che fornisci per generare l'articolo
-            max_tokens_to_sample=2000,    # Numero massimo di token da generare
+        # Richiesta a Gemini per generare il contenuto
+        response = palm.generate_text(
+            prompt=prompt,
+            model="models/text-bison-001",  # Usa il modello corretto di Gemini
+            temperature=0.7,
+            max_output_tokens=3000
         )
 
-        # Debug: Stampa l'intera risposta per capire la sua struttura
-        st.write("Risposta completa di Claude:", response)
+        if "text" in response:
+            return response["text"]
+        else:
+            st.error("Errore: La risposta di Gemini non contiene il testo previsto.")
+            return ""
+    except Exception as e:
+        st.error(f"Errore durante la generazione dell'articolo con Gemini: {e}")
+        return ""
 
-        # Estrai il completamento dalla risposta
-        if hasattr(response, 'completion'):  # Verifica se 'response' ha l'attributo 'completion'
+# Funzione per perfezionare il testo con Claude
+def refine_with_claude(content):
+    prompt = (
+        f"Prendi il seguente articolo e sistemalo con questo stile: "
+        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+        "empatia e calore umano. Assicurati che sia ben organizzato con titoli e sottotitoli chiari, e formattato correttamente."
+        "\n\nArticolo originale:\n\n"
+        f"{content}"
+        "\n\nAssistant:"
+    )
+
+    try:
+        response = claude_client.completions.create(
+            model="claude-2",
+            prompt=prompt,
+            max_tokens_to_sample=2000,
+        )
+
+        if hasattr(response, 'completion'):
             return response.completion
         else:
             st.error("Errore: La risposta di Claude non contiene il testo previsto.")
             return ""
-
     except Exception as e:
-        st.error(f"Errore durante la generazione dell'articolo: {e}")
+        st.error(f"Errore durante la rifinitura dell'articolo con Claude: {e}")
         return ""
 
 # Funzione per applicare la formattazione HTML
@@ -70,14 +96,20 @@ def publish_to_wordpress(title, content):
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
 # Streamlit UI
-st.title("Generatore di guide con Claude AI")
+st.title("Generatore di guide con Gemini e Claude AI")
 
 if st.button("Genera e Pubblica Guida"):
-    st.info("Generazione della guida in corso...")
-    guide_content = generate_article_claude()
-    st.write("Contenuto generato:", guide_content)  # Debug
-    if guide_content:
-        formatted_content = format_content(guide_content)
-        title = "Guida alla gestione dello stress"
-        publish_to_wordpress(title, formatted_content)
+    st.info("Generazione dell'articolo in corso con Gemini...")
+    gemini_content = generate_article_gemini()
+    st.write("Articolo generato da Gemini (grezzo):", gemini_content)  # Debug
+
+    if gemini_content:
+        st.info("Rifinitura dell'articolo in corso con Claude...")
+        refined_content = refine_with_claude(gemini_content)
+        st.write("Articolo perfezionato da Claude:", refined_content)  # Debug
+
+        if refined_content:
+            formatted_content = format_content(refined_content)
+            title = "Guida psicologica basata su fonti affidabili"
+            publish_to_wordpress(title, formatted_content)
 

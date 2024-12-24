@@ -6,4 +6,5 @@ pillow==9.5.0
 python-wordpress-xmlrpc==2.3
 anthropic
 requests
+google.generativeai
 

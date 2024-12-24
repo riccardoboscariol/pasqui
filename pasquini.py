@@ -18,17 +18,22 @@ claude_client = ClaudeClient(api_key=CLAUDE_API_KEY)
 # Funzione per generare l'articolo con Gemini
 def generate_article_gemini():
     try:
-        response = palm.generate_text(
-            model="text-bison-001",
-            prompt=(
-                "Scrivi una guida di almeno 1000 parole su un argomento psicologico generico. "
-                "Il tono deve essere leggero ma professionale, con ironia, humor e esempi pratici. "
-                "Struttura il contenuto in paragrafi chiari con titoli e sottotitoli."
-            ),
-            temperature=0.7,
-            max_output_tokens=2000,
+        # Cambiato il metodo per la generazione del testo
+        response = palm.chat(
+            model="models/chat-bison-001",
+            messages=[
+                {
+                    "role": "system",
+                    "content": (
+                        "Sei un esperto di psicologia e scrittore creativo. Scrivi una guida di almeno 1000 parole "
+                        "su un argomento psicologico generico. Il tono deve essere leggero ma professionale, "
+                        "con ironia, humor e esempi pratici. Struttura il contenuto in paragrafi chiari con titoli e sottotitoli."
+                    )
+                }
+            ],
+            temperature=0.7
         )
-        return response.get('text', '')
+        return response.candidates[0]['content']
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo con Gemini: {e}")
         return ""
@@ -94,5 +99,6 @@ if st.button("Genera e Pubblica Articolo"):
             st.info("Pubblicazione dell'articolo su WordPress in corso...")
             title = "Guida Psicologica Generata"
             publish_to_wordpress(title, refined_content)
+
 
 

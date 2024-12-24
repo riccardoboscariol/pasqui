@@ -1,67 +1,47 @@
 import streamlit as st
-import google.generativeai as palm
-from anthropic import Client as ClaudeClient
+from anthropic import Client
 from wordpress_xmlrpc import Client as WPClient, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
-# Configura le chiavi API
-GEMINI_API_KEY = st.secrets["gemini"]["api_key"]
+# Recupera le informazioni dalle secrets di Streamlit
 CLAUDE_API_KEY = st.secrets["claude"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
-# Configura Gemini e Claude
-palm.configure(api_key=GEMINI_API_KEY)
-claude_client = ClaudeClient(api_key=CLAUDE_API_KEY)
+# Inizializza il client di Claude
+claude_client = Client(api_key=CLAUDE_API_KEY)
 
-# Funzione per generare l'articolo con Gemini
-def generate_article_gemini():
-    try:
-        # Cambiato il metodo per la generazione del testo
-        response = palm.chat(
-            model="models/chat-bison-001",
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Sei un esperto di psicologia e scrittore creativo. Scrivi una guida di almeno 1000 parole "
-                        "su un argomento psicologico generico. Il tono deve essere leggero ma professionale, "
-                        "con ironia, humor e esempi pratici. Struttura il contenuto in paragrafi chiari con titoli e sottotitoli."
-                    )
-                }
-            ],
-            temperature=0.7
-        )
-        return response.candidates[0]['content']
-    except Exception as e:
-        st.error(f"Errore durante la generazione dell'articolo con Gemini: {e}")
-        return ""
-
-# Funzione per migliorare l'articolo con Claude
-def refine_article_with_claude(content):
+# Funzione per generare l'articolo con Claude AI
+def generate_article_claude():
     prompt = (
-        "\n\nHuman: Migliora il seguente articolo, adattandolo al tono richiesto: "
-        "un tono leggero ma professionale, con ironia, humor, esempi pratici e uno stile accattivante. "
-        "Organizza i paragrafi, aggiungi titoli pertinenti e assicurati che l'articolo sia chiaro e scorrevole. "
-        "Non modificare il contenuto in modo sostanziale, ma rendilo più fluido e interessante.\n\n"
-        f"Articolo:\n{content}\n\nAssistant:"
+        "Scrivi una guida di almeno 3000 parole come se fossi uno psicologo con questo stile: "
+        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli per organizzare il contenuto, senza includere simboli inutili. "
+        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili dove cercare articoli recenti di psicologia: "
+        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour."
     )
 
     try:
-        response = claude_client.completions.create(
-            model="claude-2",
-            prompt=prompt,
-            max_tokens_to_sample=2000,
+        # Creazione di una richiesta a Claude con i parametri richiesti
+        response = claude_client.completion(
+            model="claude-2",  # Usa il modello corretto
+            prompt=f"{anthropic.HUMAN_PROMPT} {prompt}{anthropic.AI_PROMPT}",
+            max_tokens_to_sample=3000,  # Numero massimo di token da generare
         )
-        if hasattr(response, 'completion'):
-            return response.completion
-        else:
-            st.error("Errore: La risposta di Claude non contiene il testo previsto.")
-            return ""
+
+        # Estrai il contenuto dalla risposta
+        return response.get("completion", "")
+
     except Exception as e:
-        st.error(f"Errore durante la modifica dell'articolo con Claude: {e}")
+        st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
+
+# Funzione per applicare la formattazione HTML
+def format_content(content):
+    content = content.replace("\n", "<br>")
+    return content
 
 # Funzione per pubblicare su WordPress
 def publish_to_wordpress(title, content):
@@ -81,24 +61,17 @@ def publish_to_wordpress(title, content):
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
 # Streamlit UI
-st.title("Generatore di articoli con Gemini e Claude")
+st.title("Generatore di guide con Claude AI")
 
-if st.button("Genera e Pubblica Articolo"):
-    st.info("Generazione dell'articolo con Gemini in corso...")
-    gemini_content = generate_article_gemini()
-    if gemini_content:
-        st.success("Articolo generato con successo da Gemini!")
-        st.write("Articolo grezzo generato:", gemini_content)
+if st.button("Genera e Pubblica Guida"):
+    st.info("Generazione della guida in corso...")
+    guide_content = generate_article_claude()
+    st.write("Contenuto generato:", guide_content)  # Debug
+    if guide_content:
+        formatted_content = format_content(guide_content)
+        title = "Guida psicologica basata su fonti affidabili"
+        publish_to_wordpress(title, formatted_content)
 
-        st.info("Adattamento dell'articolo con Claude in corso...")
-        refined_content = refine_article_with_claude(gemini_content)
-        if refined_content:
-            st.success("Articolo migliorato con successo da Claude!")
-            st.write("Articolo finale:", refined_content)
-
-            st.info("Pubblicazione dell'articolo su WordPress in corso...")
-            title = "Guida Psicologica Generata"
-            publish_to_wordpress(title, refined_content)
 
 
 

@@ -24,14 +24,14 @@ def generate_article_claude():
         "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. "
         "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
         "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
-        "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida. "
+        "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
     )
 
     try:
-        response = claude_client.messages.create(
+        response = claude_client.completions.create(
             model="claude-2",
-            max_tokens_to_sample=3000,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens_to_sample=3000
         )
         return response["completion"].strip()
     except Exception as e:
@@ -121,3 +121,4 @@ if st.button("Genera e Pubblica Guida"):
 
         # Pubblica su WordPress
         publish_to_wordpress(title, formatted_content)
+

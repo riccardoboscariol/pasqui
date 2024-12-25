@@ -18,7 +18,7 @@ def generate_article_claude():
         "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
         "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
-        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di differente grandezza) "
+        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
         "per organizzare il contenuto, senza includere simboli inutili. "
         "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili: "
         "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. "
@@ -30,7 +30,7 @@ def generate_article_claude():
     try:
         response = claude_client.completions.create(
             model="claude-2",
-            messages=[{"role": "user", "content": prompt}],
+            prompt=prompt,
             max_tokens_to_sample=3000
         )
         return response["completion"].strip()
@@ -44,7 +44,6 @@ def extract_title_from_content(content):
     Genera un titolo accattivante basato sul contenuto dell'articolo.
     Analizza le prime righe per creare un titolo che rifletta il tono creativo e il tema.
     """
-    # Analizza le prime 200 parole per trovare un'idea di titolo
     first_paragraph = content[:200]  # Prende le prime 200 parole o meno
     
     # Prompt per generare il titolo creativo con Claude
@@ -54,7 +53,6 @@ def extract_title_from_content(content):
         f"'La Mente Come Cinema: Guida (Decisamente Non Ossessiva) alla Gestione dei Pensieri Ripetitivi', "
         f"'L’Ansia Come Compagna di Viaggio: Manuale di Convivenza con la Tua Coinquilina Più Invadente', "
         f"'La (Semi)Scientifica Arte di Trovare l’Anima Gemella'. "
-        f"Usa lo stesso tono per creare un titolo originale. "
         f"Ecco il contenuto da cui partire: {first_paragraph}"
     )
 
@@ -70,10 +68,10 @@ def extract_title_from_content(content):
         if len(title) > 10:
             return title
         else:
-            return "Guida Psicologica Originale"
+            return "Nuova guida di Mr Psicoo"
     except Exception as e:
         st.error(f"Errore durante la generazione del titolo: {e}")
-        return "Guida Psicologica Originale"
+        return "Nuova guida di Mr Psicoo"
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
@@ -121,4 +119,5 @@ if st.button("Genera e Pubblica Guida"):
 
         # Pubblica su WordPress
         publish_to_wordpress(title, formatted_content)
+
 

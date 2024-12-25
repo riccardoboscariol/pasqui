@@ -34,60 +34,39 @@ def generate_article_claude():
             prompt=prompt,
             max_tokens_to_sample=3000
         )
-        return response["completion"].strip()
+
+        # Accedi al contenuto generato
+        return response.completion.strip()
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
 
-# Funzione per generare un titolo creativo basato sul contenuto
-def extract_title_from_content(content):
-    """
-    Genera un titolo accattivante basato sul contenuto dell'articolo.
-    Analizza le prime righe per creare un titolo che rifletta il tono creativo e il tema.
-    """
-    first_paragraph = content[:200]  # Prende le prime 200 parole o meno
-    
-    # Prompt per generare il titolo creativo con Claude
-    title_prompt = (
-        f"\n\nHuman: Dal seguente contenuto genera un titolo creativo e accattivante. "
-        f"Il titolo deve essere nello stile di questi esempi: "
-        f"'La Mente Come Cinema: Guida (Decisamente Non Ossessiva) alla Gestione dei Pensieri Ripetitivi', "
-        f"'L’Ansia Come Compagna di Viaggio: Manuale di Convivenza con la Tua Coinquilina Più Invadente', "
-        f"'La (Semi)Scientifica Arte di Trovare l’Anima Gemella'. "
-        f"Ecco il contenuto da cui partire: {first_paragraph}"
-        "\n\nAssistant:"
-    )
-
-    try:
-        response = claude_client.completions.create(
-            model="claude-2",
-            prompt=title_prompt,
-            max_tokens_to_sample=50
-        )
-        title = response["completion"].strip()
-
-        # Controllo che il titolo sia valido
-        if len(title) > 10:
-            return title
-        else:
-            return "Guida Psicologica Originale"
-    except Exception as e:
-        st.error(f"Errore durante la generazione del titolo: {e}")
-        return "Guida Psicologica Originale"
+# Funzione per estrarre un titolo accattivante dal contenuto generato
+def extract_title(content):
+    sentences = content.split("\n")
+    title_candidates = [s.strip() for s in sentences if s.strip()]
+    if title_candidates:
+        return title_candidates[0]
+    return "Titolo Accattivante per la Guida Psicologica"
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
-    """
-    Applica la formattazione HTML al contenuto per includere titoli in grassetto e paragrafi ben separati.
-    """
-    content = content.replace("\n", "<br>")
-    return content
+    # Converti titoli e sottotitoli in tag HTML
+    lines = content.split("\n")
+    formatted_lines = []
+    for line in lines:
+        if line.startswith("# "):  # Titolo principale
+            formatted_lines.append(f"<h1>{line[2:]}</h1>")
+        elif line.startswith("## "):  # Sottotitolo
+            formatted_lines.append(f"<h2>{line[3:]}</h2>")
+        elif line.startswith("### "):  # Sottosottotitolo
+            formatted_lines.append(f"<h3>{line[4:]}</h3>")
+        else:
+            formatted_lines.append(f"<p>{line}</p>")
+    return "\n".join(formatted_lines)
 
 # Funzione per pubblicare su WordPress
 def publish_to_wordpress(title, content):
-    """
-    Pubblica l'articolo generato su WordPress con il titolo e il contenuto forniti.
-    """
     if not content.strip():
         st.error("Errore: Il contenuto dell'articolo è vuoto. Verifica la generazione dell'articolo.")
         return
@@ -104,23 +83,14 @@ def publish_to_wordpress(title, content):
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
 # Streamlit UI
-st.title("Generatore di Guide Psicologiche")
+st.title("Generatore di Guide con Claude AI")
 
 if st.button("Genera e Pubblica Guida"):
     st.info("Generazione della guida in corso...")
     guide_content = generate_article_claude()
-    st.write("Contenuto generato:", guide_content)  # Debug
-
     if guide_content:
-        # Genera un titolo accattivante
-        title = extract_title_from_content(guide_content)
-        st.write("Titolo generato:", title)  # Debug
-
-        # Formatta il contenuto in HTML
+        st.write("Contenuto generato:", guide_content)  # Debug
         formatted_content = format_content(guide_content)
-
-        # Pubblica su WordPress
+        title = extract_title(guide_content)
         publish_to_wordpress(title, formatted_content)
-
-
 

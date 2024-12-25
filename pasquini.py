@@ -15,7 +15,7 @@ claude_client = Client(api_key=CLAUDE_API_KEY)
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
-        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+        "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
         "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
         "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
@@ -25,6 +25,7 @@ def generate_article_claude():
         "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
         "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
         "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
+        "\n\nAssistant:"
     )
 
     try:
@@ -48,12 +49,13 @@ def extract_title_from_content(content):
     
     # Prompt per generare il titolo creativo con Claude
     title_prompt = (
-        f"Dal seguente contenuto genera un titolo creativo e accattivante. "
+        f"\n\nHuman: Dal seguente contenuto genera un titolo creativo e accattivante. "
         f"Il titolo deve essere nello stile di questi esempi: "
         f"'La Mente Come Cinema: Guida (Decisamente Non Ossessiva) alla Gestione dei Pensieri Ripetitivi', "
         f"'L’Ansia Come Compagna di Viaggio: Manuale di Convivenza con la Tua Coinquilina Più Invadente', "
         f"'La (Semi)Scientifica Arte di Trovare l’Anima Gemella'. "
         f"Ecco il contenuto da cui partire: {first_paragraph}"
+        "\n\nAssistant:"
     )
 
     try:
@@ -68,10 +70,10 @@ def extract_title_from_content(content):
         if len(title) > 10:
             return title
         else:
-            return "Nuova guida di Mr Psicoo"
+            return "Guida Psicologica Originale"
     except Exception as e:
         st.error(f"Errore durante la generazione del titolo: {e}")
-        return "Nuova guida di Mr Psicoo"
+        return "Guida Psicologica Originale"
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
@@ -119,5 +121,6 @@ if st.button("Genera e Pubblica Guida"):
 
         # Pubblica su WordPress
         publish_to_wordpress(title, formatted_content)
+
 
 

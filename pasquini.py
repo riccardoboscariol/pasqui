@@ -45,12 +45,12 @@ def generate_article_claude():
             "https://api.anthropic.com/v1/complete",  # Endpoint corretto
             headers={
                 "x-api-key": claude_api_key,  # Chiave API di Claude
-                "anthropic-version": "2024-10-22",  # Versione corretta
+                "anthropic-version": "claude-3-5-sonnet-20241022",  # Versione corretta di Claude
                 "Content-Type": "application/json",
             },
             json={
                 "prompt": prompt,
-                "model": "claude-3-5-sonnet-20241022",  # Usa la versione corretta di Claude
+                "model": "claude-3",  # Specifica il modello corretto
                 "max_tokens_to_sample": 1024,
                 "stop_sequences": ["\n\nAssistant:"],  # Personalizza le sequenze di stop se necessario
             },
@@ -108,9 +108,8 @@ def publish_to_wordpress(title, content, image_url=None):
         'status': 'publish',
     }
 
-    # Se l'immagine è stata generata, aggiungila come media in evidenza
     if image_url:
-        post_data['featured_media'] = image_url
+        post_data['featured_media'] = image_url  # Usa l'URL dell'immagine come copertura
 
     try:
         response = requests.post(wp_url, json=post_data, auth=wp_auth)
@@ -137,22 +136,20 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Estrai il titolo dal contenuto generato (prima riga o frase)
-            title = guide_content.split("\n")[0].strip()  # Primo paragrafo come titolo
-
             # Pulsante per generare l'immagine con Canva
-            image_url = None  # Default: nessuna immagine generata
+            image_url = None
             if st.button("Genera Immagine per Articolo"):
                 image_url = generate_image_canva()
 
-            # Pulsante per pubblicare l'articolo
-            if st.button("Pubblica Articolo"):
-                publish_to_wordpress(title, guide_content, image_url)
+            # Estrai il titolo dal contenuto generato
+            title = guide_content.split("\n")[0]  # Prendi la prima riga come titolo (puoi personalizzare questa logica)
+
+            # Pubblica l'articolo
+            publish_to_wordpress(title, guide_content, image_url)
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 
 

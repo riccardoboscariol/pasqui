@@ -1,5 +1,5 @@
 import streamlit as st
-from anthropic import Client
+from anthropic import Anthropic
 from wordpress_xmlrpc import Client as WPClient, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
 
@@ -10,12 +10,12 @@ WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
 
 # Inizializza il client di Claude
-claude_client = Client(api_key=CLAUDE_API_KEY)
+claude_client = Anthropic(api_key=CLAUDE_API_KEY)
 
-# Funzione per generare l'articolo con Claude AI
+# Funzione per generare l'articolo con Claude AI utilizzando Messages API
 def generate_article_claude():
     prompt = (
-        "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
         "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
         "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
@@ -25,19 +25,21 @@ def generate_article_claude():
         "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
         "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
         "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
-        "\n\nAssistant:"
     )
 
     try:
-        # Usa il modello Claude 3.5 Sonnet per generare il contenuto
-        response = claude_client.completions.create(
-            model="claude-3-5-sonnet-20241022",
-            prompt=prompt,
-            max_tokens_to_sample=3000
+        # Usa la Messages API per generare il contenuto
+        response = claude_client.messages.create(
+            model="claude-3.5-sonnet-2024-10-22",  # Modello corretto
+            max_tokens=3000,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ]
         )
 
         # Accedi al contenuto generato
-        return response.completion.strip()
+        return response["completion"].strip()
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""

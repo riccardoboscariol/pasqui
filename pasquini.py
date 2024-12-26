@@ -32,9 +32,9 @@ def generate_article_claude():
         response = claude_client.messages.create(
             model="claude-3.5-sonnet-2024-10-22",  # Modello corretto
             max_tokens=3000,
+            system="You are a helpful and creative assistant.",  # Parametro top-level
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt},
+                {"role": "user", "content": prompt},  # Solo "user" come input
             ]
         )
 

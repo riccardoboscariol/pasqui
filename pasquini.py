@@ -1,24 +1,11 @@
 import streamlit as st
-from anthropic import Anthropic
-from wordpress_xmlrpc import Client as WPClient, WordPressPost
-from wordpress_xmlrpc.methods.posts import NewPost
-import requests  # Assicurati di importare requests per interagire con l'API di Canva
+import requests
+from requests.auth import HTTPBasicAuth
+import json
 
-# Recupera le informazioni dalle secrets di Streamlit
-CLAUDE_API_KEY = st.secrets["claude"]["api_key"]
-WORDPRESS_URL = st.secrets["wordpress"]["url"]
-WORDPRESS_USER = st.secrets["wordpress"]["username"]
-WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
-
-# Controllo per la chiave API di Canva nelle secrets
-if "canva" in st.secrets and "api_key" in st.secrets["canva"]:
-    CANVA_API_KEY = st.secrets["canva"]["api_key"]
-else:
-    st.error("Chiave API di Canva non trovata nelle secrets.")
-    CANVA_API_KEY = None  # Imposta a None se non trovata
-
-# Inizializza il client di Claude
-claude_client = Anthropic(api_key=CLAUDE_API_KEY)
+# Configurazione di Claude
+# Inserisci qui il tuo API key di Claude
+claude_api_key = "YOUR_CLAUDE_API_KEY"
 
 # Funzione per generare l'articolo con Claude AI utilizzando Messages API
 def generate_article_claude():
@@ -37,108 +24,84 @@ def generate_article_claude():
 
     try:
         # Usa la Messages API per generare il contenuto
-        response = claude_client.messages.create(
-            model="claude-3-5-sonnet-20241022",  # Modello corretto
-            max_tokens=1024,
-            system="You are a helpful and creative assistant.",  # Parametro top-level
-            messages=[{"role": "user", "content": prompt}],
+        response = requests.post(
+            "https://api.claude.ai/messages",
+            headers={"Authorization": f"Bearer {claude_api_key}"},
+            json={
+                "model": "claude-3-5-sonnet-20241022",
+                "max_tokens": 1024,
+                "system": "You are a helpful and creative assistant.",
+                "messages": [{"role": "user", "content": prompt}],
+            },
         )
 
-        # Stampa la risposta completa per il debug
-        st.write("Risposta completa di Claude:", response)
+        if response.status_code == 200:
+            response_json = response.json()
 
-        # Modifica per accedere correttamente al contenuto
-        if isinstance(response, dict) and "message" in response and isinstance(response["message"], dict):
-            content = response["message"].get("content", "").strip()  # Estrarre il contenuto
-            return content
+            # Estrai il testo dal campo TextBlock
+            if 'content' in response_json['message']:
+                text_content = ''.join([block['text'] for block in response_json['message']['content']])
+                return text_content.strip()  # Restituisci il contenuto concatenato
+            else:
+                st.error("La risposta non contiene il campo 'content'. Risposta completa: " + str(response_json))
+                return ""
         else:
-            st.error(f"Errore: la struttura della risposta non è quella attesa. Risposta completa: {response}")
+            st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
             return ""
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
 
-# Funzione per estrarre un titolo accattivante dal contenuto generato
-def extract_title(content):
-    sentences = content.split("\n")
-    title_candidates = [s.strip() for s in sentences if s.strip()]
-    if title_candidates:
-        return title_candidates[0]
-    return "Titolo Accattivante per la Guida Psicologica"
-
-# Funzione per applicare la formattazione HTML
-def format_content(content):
-    lines = content.split("\n")
-    formatted_lines = []
-    for line in lines:
-        if line.startswith("# "):  # Titolo principale
-            formatted_lines.append(f"<h1>{line[2:]}</h1>")
-        elif line.startswith("## "):  # Sottotitolo
-            formatted_lines.append(f"<h2>{line[3:]}</h2>")
-        elif line.startswith("### "):  # Sottosottotitolo
-            formatted_lines.append(f"<h3>{line[4:]}</h3>")
-        else:
-            formatted_lines.append(f"<p>{line}</p>")
-    return "\n".join(formatted_lines)
-
-# Funzione per pubblicare su WordPress
+# Funzione per pubblicare l'articolo su WordPress
 def publish_to_wordpress(title, content):
-    if not content.strip():
-        st.error("Errore: Il contenuto dell'articolo è vuoto. Verifica la generazione dell'articolo.")
-        return
+    # Configurazione dell'API di WordPress
+    wp_url = "https://your-wordpress-site.com/wp-json/wp/v2/posts"
+    wp_user = "your_username"
+    wp_password = "your_password"
+    wp_auth = HTTPBasicAuth(wp_user, wp_password)
+
+    # Prepara i dati per la richiesta
+    post_data = {
+        'title': title,
+        'content': content,
+        'status': 'publish'  # Può essere 'draft' o 'publish'
+    }
 
     try:
-        wp = WPClient(WORDPRESS_URL, WORDPRESS_USER, WORDPRESS_PASSWORD)
-        post = WordPressPost()
-        post.title = title
-        post.content = content
-        post.post_status = "publish"
-        wp.call(NewPost(post))
-        st.success("Articolo pubblicato con successo!")
-    except Exception as e:
-        st.error(f"Errore durante la pubblicazione su WordPress: {e}")
+        # Fai la richiesta POST per creare un nuovo articolo su WordPress
+        response = requests.post(wp_url, json=post_data, auth=wp_auth)
 
-# Funzione per generare un'immagine tramite l'API di Canva
-def generate_image_canva(content):
-    if CANVA_API_KEY is None:
-        st.warning("Impossibile generare un'immagine, chiave API di Canva non disponibile.")
-        return None
-
-    try:
-        # Usa l'API di Canva per generare un'immagine in base al contenuto
-        canva_api_url = "https://api.canva.com/v1/images/generate"  # URL API di Canva (è solo un esempio)
-        headers = {"Authorization": f"Bearer {CANVA_API_KEY}"}
-        data = {"content": content}
-        
-        # Richiesta POST per generare l'immagine
-        response = requests.post(canva_api_url, headers=headers, data=data)
-        
-        if response.status_code == 200:
-            image_url = response.json().get("image_url")  # URL dell'immagine generata
-            return image_url
+        if response.status_code == 201:
+            st.success(f"Articolo '{title}' pubblicato con successo!")
         else:
-            st.error("Errore durante la generazione dell'immagine con Canva.")
-            return None
+            st.error(f"Errore nella pubblicazione su WordPress: {response.status_code} - {response.text}")
     except Exception as e:
-        st.error(f"Errore nell'interazione con l'API di Canva: {e}")
-        return None
+        st.error(f"Errore nella pubblicazione su WordPress: {e}")
 
-# Streamlit UI
-st.title("Generatore di Guide con Claude AI")
+# Streamlit UI per la generazione e pubblicazione dell'articolo
+def main():
+    st.title("Generatore di Articoli con Claude AI")
 
-if st.button("Genera e Pubblica Guida"):
-    st.info("Generazione della guida in corso...")
-    guide_content = generate_article_claude()
-    if guide_content:
-        st.write("Contenuto generato:", guide_content)  # Debug
-        formatted_content = format_content(guide_content)
-        title = extract_title(guide_content)
-        publish_to_wordpress(title, formatted_content)
+    # Pulsante per generare l'articolo
+    if st.button("Genera Articolo"):
+        st.write("Generazione della guida in corso...")
+        # Genera il contenuto tramite Claude AI
+        guide_content = generate_article_claude()
 
-        # Genera l'immagine e mostra l'URL dell'immagine
-        image_url = generate_image_canva(guide_content)
-        if image_url:
-            st.image(image_url, caption="Immagine generata da Canva")
+        if guide_content:
+            # Mostra il contenuto generato
+            st.subheader("Contenuto Generato:")
+            st.write(guide_content)
+
+            # Pulsante per pubblicare l'articolo
+            if st.button("Pubblica Articolo"):
+                # Estrai il titolo dal contenuto generato (puoi personalizzare questa logica)
+                title = "Guida Psicologica: Come Gestire la Sindrome dell'Impostore"
+                publish_to_wordpress(title, guide_content)
+
+# Avvia l'app Streamlit
+if __name__ == "__main__":
+    main()
 
 
 

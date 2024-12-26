@@ -44,14 +44,11 @@ def generate_article_claude():
             messages=[{"role": "user", "content": prompt}],
         )
         
-        # Aggiungi questo print per vedere la risposta
-        st.write(response)  # Aggiungi questa riga per debug
-        
-        # Controlla la risposta per capire la struttura
-        if 'completion' in response:
-            return response["completion"].strip()
+        # Estrai il testo dal campo content
+        if response and 'content' in response['message']:
+            return response['message']['content'].strip()  # Restituisci il contenuto del messaggio
         else:
-            st.error("La risposta non contiene il campo 'completion'. Risposta completa: " + str(response))
+            st.error("La risposta non contiene il campo 'content'. Risposta completa: " + str(response))
             return ""
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
@@ -138,6 +135,7 @@ if st.button("Genera e Pubblica Guida"):
         image_url = generate_image_canva(guide_content)
         if image_url:
             st.image(image_url, caption="Immagine generata da Canva")
+
 
 
 

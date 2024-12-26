@@ -7,3 +7,4 @@ python-wordpress-xmlrpc==2.3
 anthropic
 requests
 google-generativeai>=0.1.0
+requests

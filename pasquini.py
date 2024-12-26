@@ -43,9 +43,16 @@ def generate_article_claude():
             system="You are a helpful and creative assistant.",  # Parametro top-level
             messages=[{"role": "user", "content": prompt}],
         )
-
-        # Accedi al contenuto generato
-        return response["completion"].strip()
+        
+        # Aggiungi questo print per vedere la risposta
+        st.write(response)  # Aggiungi questa riga per debug
+        
+        # Controlla la risposta per capire la struttura
+        if 'completion' in response:
+            return response["completion"].strip()
+        else:
+            st.error("La risposta non contiene il campo 'completion'. Risposta completa: " + str(response))
+            return ""
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""

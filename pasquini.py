@@ -45,11 +45,11 @@ def generate_article_claude():
             "https://api.anthropic.com/v1/messages",  # Endpoint corretto
             headers={
                 "x-api-key": claude_api_key,  # Chiave API di Claude
-                "anthropic-version": "claude-3",  # Utilizza la versione compatibile
+                "anthropic-version": "claude-3-5-sonnet-20241022",  # Utilizza la versione corretta
                 "Content-Type": "application/json",
             },
             json={
-                "model": "claude-3",  # Specifica il modello corretto
+                "model": "claude-3-5-sonnet-20241022",  # Specifica la versione corretta di Claude
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": prompt}
@@ -152,7 +152,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 
 

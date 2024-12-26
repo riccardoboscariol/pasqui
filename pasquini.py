@@ -8,6 +8,7 @@ CLAUDE_API_KEY = st.secrets["claude"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
+CANVA_API_KEY = st.secrets["canva"]["api_key"]  # Aggiungi la chiave API di Canva
 
 # Inizializza il client di Claude
 claude_client = Anthropic(api_key=CLAUDE_API_KEY)
@@ -33,19 +34,11 @@ def generate_article_claude():
             model="claude-3-5-sonnet-20241022",  # Modello corretto
             max_tokens=3000,
             system="You are a helpful and creative assistant.",  # Parametro top-level
-            messages=[{"role": "user", "content": prompt}],  # Solo "user" come input
+            messages=[{"role": "user", "content": prompt}],
         )
 
-        # Log completo della risposta per il debug
-        st.write("Risposta completa da Claude:", response)
-
-        # Accedi al contenuto generato, verifica se "completion" è presente nella risposta
-        if "completion" in response:
-            return response["completion"].strip()  # Se "completion" esiste, lo restituiamo
-        else:
-            st.error("Risposta di Claude senza 'completion'")
-            return ""
-
+        # Accedi al contenuto generato
+        return response["completion"].strip()
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
@@ -60,7 +53,6 @@ def extract_title(content):
 
 # Funzione per applicare la formattazione HTML
 def format_content(content):
-    # Converti titoli e sottotitoli in tag HTML
     lines = content.split("\n")
     formatted_lines = []
     for line in lines:
@@ -68,7 +60,7 @@ def format_content(content):
             formatted_lines.append(f"<h1>{line[2:]}</h1>")
         elif line.startswith("## "):  # Sottotitolo
             formatted_lines.append(f"<h2>{line[3:]}</h2>")
-        elif line.startswith("### "):  # Sottosottotolo
+        elif line.startswith("### "):  # Sottosottotitolo
             formatted_lines.append(f"<h3>{line[4:]}</h3>")
         else:
             formatted_lines.append(f"<p>{line}</p>")
@@ -91,6 +83,29 @@ def publish_to_wordpress(title, content):
     except Exception as e:
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
+# Funzione per generare un'immagine tramite l'API di Canva
+def generate_image_canva(content):
+    try:
+        # Usa l'API di Canva per generare un'immagine in base al contenuto
+        # (qui dovrai adattare questa parte in base alla documentazione di Canva API)
+        # Pseudo codice per generare un'immagine con Canva API:
+        canva_api_url = "https://api.canva.com/v1/images/generate"  # URL API di Canva (è solo un esempio)
+        headers = {"Authorization": f"Bearer {CANVA_API_KEY}"}
+        data = {"content": content}
+        
+        # Richiesta POST per generare l'immagine
+        response = requests.post(canva_api_url, headers=headers, data=data)
+        
+        if response.status_code == 200:
+            image_url = response.json().get("image_url")  # URL dell'immagine generata
+            return image_url
+        else:
+            st.error("Errore durante la generazione dell'immagine con Canva.")
+            return None
+    except Exception as e:
+        st.error(f"Errore nell'interazione con l'API di Canva: {e}")
+        return None
+
 # Streamlit UI
 st.title("Generatore di Guide con Claude AI")
 
@@ -98,9 +113,14 @@ if st.button("Genera e Pubblica Guida"):
     st.info("Generazione della guida in corso...")
     guide_content = generate_article_claude()
     if guide_content:
-        st.write("Contenuto generato:", guide_content)  # Mostra il contenuto generato per il debug
+        st.write("Contenuto generato:", guide_content)  # Debug
         formatted_content = format_content(guide_content)
         title = extract_title(guide_content)
         publish_to_wordpress(title, formatted_content)
+
+        # Genera l'immagine e mostra l'URL dell'immagine
+        image_url = generate_image_canva(guide_content)
+        if image_url:
+            st.image(image_url, caption="Immagine generata da Canva")
 
 

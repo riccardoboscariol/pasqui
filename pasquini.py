@@ -33,13 +33,16 @@ def generate_article_claude():
             model="claude-3-5-sonnet-20241022",  # Modello corretto
             max_tokens=3000,
             system="You are a helpful and creative assistant.",  # Parametro top-level
-            messages=[
-                {"role": "user", "content": prompt},  # Solo "user" come input
-            ]
+            messages=[{"role": "user", "content": prompt}],  # Solo "user" come input
         )
 
-        # Accedi al contenuto generato
-        return response["completion"].strip()
+        # Accedi al contenuto generato. La risposta potrebbe essere strutturata diversamente, quindi verifichiamo l'oggetto
+        if "completion" in response:
+            return response["completion"].strip()  # Se "completion" esiste, lo restituiamo
+        else:
+            st.error("Risposta di Claude senza 'completion'")
+            return ""
+
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""

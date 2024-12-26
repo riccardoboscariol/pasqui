@@ -30,7 +30,7 @@ def generate_article_claude():
     try:
         # Usa la Messages API per generare il contenuto
         response = claude_client.messages.create(
-            model="claude-3.5-sonnet-2024-10-22",  # Modello corretto
+            model="claude-3-5-sonnet-20241022",  # Modello corretto
             max_tokens=3000,
             system="You are a helpful and creative assistant.",  # Parametro top-level
             messages=[

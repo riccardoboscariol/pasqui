@@ -16,6 +16,7 @@ def generate_article_claude():
         "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
         "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
         "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
+        "\n\nAssistant:"
     )
 
     try:
@@ -129,6 +130,7 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 
 

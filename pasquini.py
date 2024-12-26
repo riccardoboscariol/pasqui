@@ -45,12 +45,12 @@ def generate_article_claude():
             "https://api.anthropic.com/v1/complete",  # Endpoint corretto
             headers={
                 "x-api-key": claude_api_key,  # Chiave API di Claude
-                "anthropic-version": "2024-10-22",  # Assicurati di utilizzare la versione corretta
+                "anthropic-version": "2024-10-22",  # Versione corretta
                 "Content-Type": "application/json",
             },
             json={
                 "prompt": prompt,
-                "model": "claude-3",  # Specifica il modello corretto
+                "model": "claude-3-5-sonnet-20241022",  # Usa la versione corretta di Claude
                 "max_tokens_to_sample": 1024,
                 "stop_sequences": ["\n\nAssistant:"],  # Personalizza le sequenze di stop se necessario
             },
@@ -96,7 +96,7 @@ def generate_image_canva():
         return None
 
 # Funzione per pubblicare l'articolo su WordPress
-def publish_to_wordpress(title, content, image_url):
+def publish_to_wordpress(title, content, image_url=None):
     wp_url = st.secrets["wordpress"]["url"].replace("xmlrpc.php", "wp-json/wp/v2/posts")
     wp_user = st.secrets["wordpress"]["username"]
     wp_password = st.secrets["wordpress"]["password"]
@@ -106,8 +106,11 @@ def publish_to_wordpress(title, content, image_url):
         'title': title,
         'content': content,
         'status': 'publish',
-        'featured_media': image_url  # Usa l'URL dell'immagine come copertura
     }
+
+    # Se l'immagine è stata generata, aggiungila come media in evidenza
+    if image_url:
+        post_data['featured_media'] = image_url
 
     try:
         response = requests.post(wp_url, json=post_data, auth=wp_auth)
@@ -134,16 +137,16 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
+            # Estrai il titolo dal contenuto generato (prima riga o frase)
+            title = guide_content.split("\n")[0].strip()  # Primo paragrafo come titolo
+
             # Pulsante per generare l'immagine con Canva
+            image_url = None  # Default: nessuna immagine generata
             if st.button("Genera Immagine per Articolo"):
                 image_url = generate_image_canva()
-                if image_url:
-                    st.image(image_url, caption="Immagine Generata")
 
             # Pulsante per pubblicare l'articolo
             if st.button("Pubblica Articolo"):
-                # Estrai il titolo dal contenuto generato (puoi personalizzare questa logica)
-                title = "Guida Psicologica: Come Gestire lo Stress Quotidiano"
                 publish_to_wordpress(title, guide_content, image_url)
 
 # Avvia l'app Streamlit

@@ -41,15 +41,16 @@ def generate_article_claude():
     )
 
     try:
+        # Modificato per usare la versione corretta dell'API di Claude
         response = requests.post(
-            "https://api.anthropic.com/v1/messages",  # Endpoint corretto
+            "https://api.anthropic.com/v1/messages",  # Endpoint corretto per i messaggi
             headers={
                 "x-api-key": claude_api_key,  # Chiave API di Claude
-                "anthropic-version": "claude-3-5-sonnet-20241022",  # Utilizza la versione corretta
+                "anthropic-version": "2023-06-01",  # Versione corretta
                 "Content-Type": "application/json",
             },
             json={
-                "model": "claude-3-5-sonnet-20241022",  # Specifica la versione corretta di Claude
+                "model": "claude-3",  # Usa un modello valido di Claude
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": prompt}

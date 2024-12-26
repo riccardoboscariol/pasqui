@@ -2,13 +2,20 @@ import streamlit as st
 from anthropic import Anthropic
 from wordpress_xmlrpc import Client as WPClient, WordPressPost
 from wordpress_xmlrpc.methods.posts import NewPost
+import requests  # Assicurati di importare requests per interagire con l'API di Canva
 
 # Recupera le informazioni dalle secrets di Streamlit
 CLAUDE_API_KEY = st.secrets["claude"]["api_key"]
 WORDPRESS_URL = st.secrets["wordpress"]["url"]
 WORDPRESS_USER = st.secrets["wordpress"]["username"]
 WORDPRESS_PASSWORD = st.secrets["wordpress"]["password"]
-CANVA_API_KEY = st.secrets["canva"]["api_key"]  # Aggiungi la chiave API di Canva
+
+# Controllo per la chiave API di Canva nelle secrets
+if "canva" in st.secrets and "api_key" in st.secrets["canva"]:
+    CANVA_API_KEY = st.secrets["canva"]["api_key"]
+else:
+    st.error("Chiave API di Canva non trovata nelle secrets.")
+    CANVA_API_KEY = None  # Imposta a None se non trovata
 
 # Inizializza il client di Claude
 claude_client = Anthropic(api_key=CLAUDE_API_KEY)
@@ -85,10 +92,12 @@ def publish_to_wordpress(title, content):
 
 # Funzione per generare un'immagine tramite l'API di Canva
 def generate_image_canva(content):
+    if CANVA_API_KEY is None:
+        st.warning("Impossibile generare un'immagine, chiave API di Canva non disponibile.")
+        return None
+
     try:
         # Usa l'API di Canva per generare un'immagine in base al contenuto
-        # (qui dovrai adattare questa parte in base alla documentazione di Canva API)
-        # Pseudo codice per generare un'immagine con Canva API:
         canva_api_url = "https://api.canva.com/v1/images/generate"  # URL API di Canva (è solo un esempio)
         headers = {"Authorization": f"Bearer {CANVA_API_KEY}"}
         data = {"content": content}
@@ -122,5 +131,6 @@ if st.button("Genera e Pubblica Guida"):
         image_url = generate_image_canva(guide_content)
         if image_url:
             st.image(image_url, caption="Immagine generata da Canva")
+
 
 

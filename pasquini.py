@@ -31,7 +31,7 @@ def generate_article_claude():
     try:
         # Usa il modello Claude 3.5 Sonnet per generare il contenuto
         response = claude_client.completions.create(
-            model="claude-3.0",
+            model="claude-3.5-sonnet-2024-10-22",
             prompt=prompt,
             max_tokens_to_sample=3000
         )

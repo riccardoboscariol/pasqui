@@ -3,10 +3,32 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
+# Configurazione di Claude
+claude_api_key = st.secrets["claude"]["api_key"]
+
+# Funzione per verificare la chiave API di Canva
+def check_canva_api_key():
+    url = "https://api.canva.com/v1/teams"  # Endpoint di test per verificare l'accesso
+    headers = {
+        "Authorization": f"Bearer {st.secrets['canva']['api_key']}",
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            st.success("Chiave API Canva è valida!")
+        else:
+            st.error(f"Errore nell'autenticazione con Canva API: {response.status_code} - {response.text}")
+    except Exception as e:
+        st.error(f"Errore nella connessione all'API Canva: {e}")
+
+# Verifica la chiave API di Canva
+check_canva_api_key()
+
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
-        "\n\nHuman: Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
         "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
         "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
@@ -16,28 +38,27 @@ def generate_article_claude():
         "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
         "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
         "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
-        "\n\nAssistant:"
     )
 
     try:
         response = requests.post(
-            "https://api.anthropic.com/v1/complete",
+            "https://api.anthropic.com/v1/complete",  # Endpoint corretto
             headers={
-                "x-api-key": st.secrets["claude"]["api_key"],
+                "x-api-key": claude_api_key,  # Chiave API di Claude
+                "anthropic-version": "2024-10-22",  # Assicurati di utilizzare la versione corretta
                 "Content-Type": "application/json",
-                "anthropic-version": "2023-06-01",
             },
             json={
                 "prompt": prompt,
-                "model": "claude-2",
+                "model": "claude-3",  # Specifica il modello corretto
                 "max_tokens_to_sample": 1024,
-                "stop_sequences": ["\n\nHuman:"],
+                "stop_sequences": ["\n\nAssistant:"],  # Personalizza le sequenze di stop se necessario
             },
         )
 
         if response.status_code == 200:
             response_json = response.json()
-            return response_json.get("completion", "").strip()
+            return response_json.get("completion", "").strip()  # Estrai il testo generato
         else:
             st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
             return ""
@@ -45,33 +66,34 @@ def generate_article_claude():
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
 
-
-# Funzione per creare un'immagine con Canva
-def generate_image_with_canva(prompt):
-    url = "https://api.canva.com/v1/images/generate"
+# Funzione per generare un'immagine con Canva API
+def generate_image_canva():
+    url = "https://api.canva.com/v1/images/generate"  # Endpoint di generazione immagine
     headers = {
         "Authorization": f"Bearer {st.secrets['canva']['api_key']}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
     }
+
     data = {
-        "client_id": st.secrets['canva']['client_id'],
-        "prompt": prompt,
-        "width": 800,
-        "height": 600
+        "template_id": "TEMPLATE_ID",  # Sostituisci con un template ID valido di Canva
+        "variables": {
+            "title": "Guida Psicologica",
+            "content": "Immagine generata tramite l'API di Canva per l'articolo."
+        }
     }
 
     try:
-        response = requests.post(url, json=data, headers=headers)
+        response = requests.post(url, headers=headers, json=data)
         if response.status_code == 200:
-            response_json = response.json()
-            return response_json.get('image_url', '')
+            image_url = response.json().get("image_url")
+            st.success("Immagine generata con successo!")
+            return image_url
         else:
             st.error(f"Errore nella generazione dell'immagine: {response.status_code} - {response.text}")
-            return ""
+            return None
     except Exception as e:
         st.error(f"Errore durante la generazione dell'immagine: {e}")
-        return ""
-
+        return None
 
 # Funzione per pubblicare l'articolo su WordPress
 def publish_to_wordpress(title, content, image_url):
@@ -83,8 +105,8 @@ def publish_to_wordpress(title, content, image_url):
     post_data = {
         'title': title,
         'content': content,
-        'status': 'publish',  # Può essere 'draft' o 'publish'
-        'featured_media': image_url,  # Usare l'immagine come copertina
+        'status': 'publish',
+        'featured_media': image_url  # Usa l'URL dell'immagine come copertura
     }
 
     try:
@@ -97,15 +119,13 @@ def publish_to_wordpress(title, content, image_url):
     except Exception as e:
         st.error(f"Errore nella pubblicazione su WordPress: {e}")
 
-
 # Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
-    st.title("Generatore di Articoli con Claude AI e Canva")
+    st.title("Generatore di Articoli con Claude AI")
 
     # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
-
         # Genera il contenuto tramite Claude AI
         guide_content = generate_article_claude()
 
@@ -114,23 +134,21 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Creazione dell'immagine per l'articolo tramite Canva
-            image_prompt = "Un'immagine creativa e professionale per una guida psicologica sullo stress"
-            image_url = generate_image_with_canva(image_prompt)
+            # Pulsante per generare l'immagine con Canva
+            if st.button("Genera Immagine per Articolo"):
+                image_url = generate_image_canva()
+                if image_url:
+                    st.image(image_url, caption="Immagine Generata")
 
-            if image_url:
-                st.image(image_url, caption="Immagine generata con Canva")
-
-                # Pulsante per pubblicare l'articolo
-                if st.button("Pubblica Articolo"):
-                    # Estrai il titolo dal contenuto generato (puoi personalizzare questa logica)
-                    title = "Guida Psicologica: Come Gestire lo Stress Quotidiano"
-                    publish_to_wordpress(title, guide_content, image_url)
+            # Pulsante per pubblicare l'articolo
+            if st.button("Pubblica Articolo"):
+                # Estrai il titolo dal contenuto generato (puoi personalizzare questa logica)
+                title = "Guida Psicologica: Come Gestire lo Stress Quotidiano"
+                publish_to_wordpress(title, guide_content, image_url)
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 
 

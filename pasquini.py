@@ -41,7 +41,7 @@ def generate_article_claude():
     )
 
     try:
-        # Modificato per usare la versione corretta dell'API di Claude
+        # Modificato per usare il modello corretto
         response = requests.post(
             "https://api.anthropic.com/v1/messages",  # Endpoint corretto per i messaggi
             headers={
@@ -50,7 +50,7 @@ def generate_article_claude():
                 "Content-Type": "application/json",
             },
             json={
-                "model": "claude-3",  # Usa un modello valido di Claude
+                "model": "claude-3-5-sonnet-20241022",  # Modello corretto
                 "max_tokens": 1024,
                 "messages": [
                     {"role": "user", "content": prompt}

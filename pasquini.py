@@ -36,7 +36,10 @@ def generate_article_claude():
             messages=[{"role": "user", "content": prompt}],  # Solo "user" come input
         )
 
-        # Accedi al contenuto generato. La risposta potrebbe essere strutturata diversamente, quindi verifichiamo l'oggetto
+        # Log completo della risposta per il debug
+        st.write("Risposta completa da Claude:", response)
+
+        # Accedi al contenuto generato, verifica se "completion" è presente nella risposta
         if "completion" in response:
             return response["completion"].strip()  # Se "completion" esiste, lo restituiamo
         else:
@@ -65,7 +68,7 @@ def format_content(content):
             formatted_lines.append(f"<h1>{line[2:]}</h1>")
         elif line.startswith("## "):  # Sottotitolo
             formatted_lines.append(f"<h2>{line[3:]}</h2>")
-        elif line.startswith("### "):  # Sottosottotitolo
+        elif line.startswith("### "):  # Sottosottotolo
             formatted_lines.append(f"<h3>{line[4:]}</h3>")
         else:
             formatted_lines.append(f"<p>{line}</p>")
@@ -95,8 +98,9 @@ if st.button("Genera e Pubblica Guida"):
     st.info("Generazione della guida in corso...")
     guide_content = generate_article_claude()
     if guide_content:
-        st.write("Contenuto generato:", guide_content)  # Debug
+        st.write("Contenuto generato:", guide_content)  # Mostra il contenuto generato per il debug
         formatted_content = format_content(guide_content)
         title = extract_title(guide_content)
         publish_to_wordpress(title, formatted_content)
+
 

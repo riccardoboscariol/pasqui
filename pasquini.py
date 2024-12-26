@@ -42,17 +42,18 @@ def generate_article_claude():
 
     try:
         response = requests.post(
-            "https://api.anthropic.com/v1/complete",  # Endpoint corretto
+            "https://api.anthropic.com/v1/messages",  # Endpoint corretto
             headers={
                 "x-api-key": claude_api_key,  # Chiave API di Claude
-                "anthropic-version": "claude-3-5-sonnet-20241022",  # Versione corretta di Claude
+                "anthropic-version": "claude-3",  # Utilizza la versione compatibile
                 "Content-Type": "application/json",
             },
             json={
-                "prompt": prompt,
                 "model": "claude-3",  # Specifica il modello corretto
-                "max_tokens_to_sample": 1024,
-                "stop_sequences": ["\n\nAssistant:"],  # Personalizza le sequenze di stop se necessario
+                "max_tokens": 1024,
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
             },
         )
 
@@ -140,16 +141,18 @@ def main():
             image_url = None
             if st.button("Genera Immagine per Articolo"):
                 image_url = generate_image_canva()
+                if image_url:
+                    st.image(image_url, caption="Immagine Generata")
 
-            # Estrai il titolo dal contenuto generato
-            title = guide_content.split("\n")[0]  # Prendi la prima riga come titolo (puoi personalizzare questa logica)
-
-            # Pubblica l'articolo
-            publish_to_wordpress(title, guide_content, image_url)
+            # Pulsante per pubblicare l'articolo
+            if st.button("Pubblica Articolo"):
+                title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
+                publish_to_wordpress(title, guide_content, image_url)
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 
 

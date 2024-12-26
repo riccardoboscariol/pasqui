@@ -22,9 +22,6 @@ def check_canva_api_key():
     except Exception as e:
         st.error(f"Errore nella connessione all'API Canva: {e}")
 
-# Verifica la chiave API di Canva
-check_canva_api_key()
-
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
@@ -63,10 +60,10 @@ def generate_article_claude():
             return response_json.get("completion", "").strip()  # Estrai il testo generato
         else:
             st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
-            return ""
+            return None  # Restituisce None in caso di errore
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
-        return ""
+        return None  # Restituisce None in caso di eccezione
 
 # Funzione per generare un'immagine con Canva API
 def generate_image_canva():
@@ -149,10 +146,13 @@ def main():
             if st.button("Pubblica Articolo"):
                 title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
                 publish_to_wordpress(title, guide_content, image_url)
+        else:
+            st.error("Non è stato possibile generare l'articolo.")
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 
 

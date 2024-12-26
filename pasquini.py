@@ -43,12 +43,16 @@ def generate_article_claude():
             system="You are a helpful and creative assistant.",  # Parametro top-level
             messages=[{"role": "user", "content": prompt}],
         )
-        
-        # Estrai il testo dal campo content
-        if response and 'content' in response['message']:
-            return response['message']['content'].strip()  # Restituisci il contenuto del messaggio
+
+        # Stampa la risposta completa per il debug
+        st.write("Risposta completa di Claude:", response)
+
+        # Modifica per accedere correttamente al contenuto
+        if isinstance(response, dict) and "message" in response and isinstance(response["message"], dict):
+            content = response["message"].get("content", "").strip()  # Estrarre il contenuto
+            return content
         else:
-            st.error("La risposta non contiene il campo 'content'. Risposta completa: " + str(response))
+            st.error(f"Errore: la struttura della risposta non è quella attesa. Risposta completa: {response}")
             return ""
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")

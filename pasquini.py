@@ -20,22 +20,23 @@ def generate_article_claude():
 
     try:
         response = requests.post(
-            "https://api.anthropic.com/v1/complete",  # Endpoint corretto
+            "https://api.anthropic.com/v1/complete",
             headers={
-                "x-api-key": st.secrets["claude"]["api_key"],  # Chiave API dai segreti
+                "x-api-key": st.secrets["claude"]["api_key"],
                 "Content-Type": "application/json",
+                "anthropic-version": "2023-06-01",
             },
             json={
                 "prompt": prompt,
-                "model": "claude-2",  # Specifica il modello corretto
+                "model": "claude-2",
                 "max_tokens_to_sample": 1024,
-                "stop_sequences": ["\n\nHuman:"],  # Personalizza le sequenze di stop se necessario
+                "stop_sequences": ["\n\nHuman:"],
             },
         )
 
         if response.status_code == 200:
             response_json = response.json()
-            return response_json.get("completion", "").strip()  # Estrai il testo generato
+            return response_json.get("completion", "").strip()
         else:
             st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
             return ""
@@ -43,26 +44,27 @@ def generate_article_claude():
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return ""
 
-# Funzione per generare immagini con Canva
-def generate_image_canva(description):
+# Funzione per generare un'immagine con Canva API
+def generate_image_canva():
+    prompt = "Crea un'immagine accattivante che rappresenti lo stress e la sua gestione in modo creativo e professionale."
     try:
         response = requests.post(
-            "https://api.canva.com/v1/generate-image",  # Endpoint di Canva API
+            "https://api.canva.com/v1/images/generate",
             headers={
                 "Authorization": f"Bearer {st.secrets['canva']['api_key']}",
                 "Content-Type": "application/json",
             },
             json={
-                "description": description,
-                "size": "1024x1024",  # Dimensioni immagine
+                "prompt": prompt,
+                "size": "1024x1024",
             },
         )
 
         if response.status_code == 200:
             response_json = response.json()
-            return response_json.get("image_url", "")  # Restituisce l'URL dell'immagine generata
+            return response_json.get("url", "")  # Restituisce l'URL dell'immagine generata
         else:
-            st.error(f"Errore nella risposta di Canva: {response.status_code} - {response.text}")
+            st.error(f"Errore nella generazione dell'immagine: {response.status_code} - {response.text}")
             return ""
     except Exception as e:
         st.error(f"Errore durante la generazione dell'immagine: {e}")
@@ -78,8 +80,9 @@ def publish_to_wordpress(title, content, image_url):
     # Prepara i dati per la richiesta
     post_data = {
         'title': title,
-        'content': content + f'<img src="{image_url}" alt="Immagine generata">',  # Aggiungi immagine all'articolo
-        'status': 'publish'  # Può essere 'draft' o 'publish'
+        'content': content,
+        'status': 'publish',
+        'featured_media': image_url  # URL dell'immagine da usare come copertina
     }
 
     try:
@@ -94,9 +97,8 @@ def publish_to_wordpress(title, content, image_url):
 
 # Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
-    st.title("Generatore di Articoli e Immagini con Claude AI e Canva")
+    st.title("Generatore di Articoli con Claude AI e Immagini Canva")
 
-    # Generazione articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
         guide_content = generate_article_claude()
@@ -105,25 +107,16 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Suggerisci un titolo automaticamente
-            suggested_title = guide_content.split("\n")[0]  # Prima riga del contenuto generato
-            title = st.text_input("Titolo dell'articolo:", value=suggested_title)
+            # Genera un'immagine
+            st.write("Generazione dell'immagine in corso...")
+            image_url = generate_image_canva()
+            if image_url:
+                st.image(image_url, caption="Anteprima dell'immagine generata")
 
-            # Generazione immagine
-            description = st.text_input("Descrizione per l'immagine:")
-            if st.button("Genera Immagine"):
-                image_url = generate_image_canva(description)
-
-                if image_url:
-                    st.image(image_url, caption="Immagine Generata")
-                    st.write(f"URL Immagine: {image_url}")
-
-            # Pubblicazione articolo
+            # Pubblica l'articolo
             if st.button("Pubblica Articolo"):
-                if not title.strip():
-                    st.error("Il titolo dell'articolo non può essere vuoto!")
-                else:
-                    publish_to_wordpress(title, guide_content, image_url)
+                title = "Guida Psicologica: Come Gestire lo Stress Quotidiano"  # Modifica per estrarre il titolo dal contenuto
+                publish_to_wordpress(title, guide_content, image_url)
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":

@@ -1,183 +1,72 @@
 import streamlit as st
 import requests
-from requests.auth import HTTPBasicAuth
-import json
-import time
 
 # Configurazione API Claude
 claude_api_key = st.secrets["claude"]["api_key"]
 
-# Configurazione API Canva
-canva_api_key = st.secrets["canva"]["api_key"]
-
-# Configurazione WordPress
-wp_url = st.secrets["wordpress"]["url"].replace("xmlrpc.php", "wp-json/wp/v2/posts")
-wp_user = st.secrets["wordpress"]["username"]
-wp_password = st.secrets["wordpress"]["password"]
-
-# Funzione per creare un batch di richieste con Claude
-def create_message_batch(prompt):
-    url = "https://api.anthropic.com/v1/message_batches"
+# Funzione per generare un articolo con Claude 3.5 Sonnet
+def generate_article_claude():
+    url = "https://api.anthropic.com/v1/messages"  # Endpoint corretto
     headers = {
-        "x-api-key": claude_api_key,
+        "anthropic-api-key": claude_api_key,  # Header di autenticazione
         "Content-Type": "application/json",
     }
 
-    batch_data = {
-        "requests": [
-            {
-                "custom_id": "article_generation_request",
-                "params": {
-                    "model": "claude-3-5-sonnet-20241022",
-                    "max_tokens": 4096,  # Numero maggiore di token per generare l'intera guida
-                    "messages": [{"role": "user", "content": prompt}],
-                },
-            }
-        ]
+    # Prompt per generare l'articolo
+    prompt = (
+        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
+        "per organizzare il contenuto, senza includere simboli inutili. "
+        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili: "
+        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. "
+        "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
+        "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
+        "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
+    )
+
+    # Dati della richiesta
+    payload = {
+        "model": "claude-3-5-sonnet-20241022",  # Specifica il modello
+        "messages": [{"role": "user", "content": prompt}],
+        "max_tokens_to_sample": 4096,  # Imposta il limite di token
+        "temperature": 0.7,  # Controlla la creatività
     }
 
     try:
-        response = requests.post(url, headers=headers, json=batch_data)
-        if response.status_code == 201:
-            batch_info = response.json()
-            st.success(f"Batch creato con ID: {batch_info['id']}")
-            return batch_info["id"]
-        else:
-            st.error(f"Errore nella creazione del batch: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        st.error(f"Errore durante la creazione del batch: {e}")
-        return None
+        # Invio della richiesta
+        response = requests.post(url, headers=headers, json=payload)
 
-# Funzione per monitorare lo stato di un batch
-def monitor_batch(batch_id):
-    url = f"https://api.anthropic.com/v1/message_batches/{batch_id}"
-    headers = {
-        "x-api-key": claude_api_key,
-    }
-
-    while True:
-        try:
-            response = requests.get(url, headers=headers)
-            if response.status_code == 200:
-                batch_status = response.json()
-                if batch_status["processing_status"] == "ended":
-                    st.success("Batch completato!")
-                    return batch_status.get("results_url")
-                elif batch_status["processing_status"] == "in_progress":
-                    st.info("Batch in elaborazione, attendere...")
-                else:
-                    st.error(f"Stato batch sconosciuto: {batch_status['processing_status']}")
-                    return None
-            else:
-                st.error(f"Errore nel monitoraggio del batch: {response.status_code} - {response.text}")
-                return None
-        except Exception as e:
-            st.error(f"Errore durante il monitoraggio del batch: {e}")
-            return None
-
-        time.sleep(5)  # Attendi 5 secondi prima di riprovare
-
-# Funzione per recuperare i risultati del batch
-def retrieve_batch_results(results_url):
-    try:
-        response = requests.get(results_url)
         if response.status_code == 200:
-            results = response.json()
-            for result in results:
-                if result["result"]["type"] == "succeeded":
-                    return result["result"]["message"]["content"]
-            st.error("Nessun risultato valido trovato nel batch.")
-            return None
+            # Parsing della risposta
+            response_json = response.json()
+            completion = response_json.get("completion", "").strip()
+            return completion  # Restituisce il contenuto generato
         else:
-            st.error(f"Errore nel recupero dei risultati: {response.status_code} - {response.text}")
+            # Gestione degli errori
+            st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
             return None
     except Exception as e:
-        st.error(f"Errore durante il recupero dei risultati: {e}")
+        st.error(f"Errore durante la generazione dell'articolo: {e}")
         return None
 
-# Funzione per generare l'immagine con Canva API
-def generate_image_canva():
-    url = "https://api.canva.com/v1/images/generate"
-    headers = {
-        "Authorization": f"Bearer {canva_api_key}",
-        "Content-Type": "application/json",
-    }
-
-    data = {
-        "template_id": "TEMPLATE_ID",  # Sostituisci con un template ID valido di Canva
-        "variables": {
-            "title": "Guida Psicologica",
-            "content": "Immagine generata tramite l'API di Canva per l'articolo."
-        }
-    }
-
-    try:
-        response = requests.post(url, headers=headers, json=data)
-        if response.status_code == 200:
-            return response.json().get("image_url")
-        else:
-            st.error(f"Errore nella generazione dell'immagine: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        st.error(f"Errore durante la generazione dell'immagine: {e}")
-        return None
-
-# Funzione per pubblicare l'articolo su WordPress
-def publish_to_wordpress(title, content, image_url=None):
-    wp_auth = HTTPBasicAuth(wp_user, wp_password)
-
-    post_data = {
-        'title': title,
-        'content': content,
-        'status': 'publish',
-    }
-
-    if image_url:
-        post_data['featured_media'] = image_url
-
-    try:
-        response = requests.post(wp_url, json=post_data, auth=wp_auth)
-        if response.status_code == 201:
-            st.success(f"Articolo '{title}' pubblicato con successo!")
-        else:
-            st.error(f"Errore nella pubblicazione su WordPress: {response.status_code} - {response.text}")
-    except Exception as e:
-        st.error(f"Errore nella pubblicazione su WordPress: {e}")
-
-# Streamlit UI per la generazione e pubblicazione dell'articolo
+# Funzione per la UI di Streamlit
 def main():
-    st.title("Generatore di Articoli con Claude AI")
+    st.title("Generatore di Articoli con Claude 3.5 Sonnet")
 
     # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
-        prompt = (
-            "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo..."
-            # Qui aggiungi il prompt completo
-        )
+        guide_content = generate_article_claude()
 
-        batch_id = create_message_batch(prompt)
-        if batch_id:
-            results_url = monitor_batch(batch_id)
-            if results_url:
-                guide_content = retrieve_batch_results(results_url)
-                if guide_content:
-                    st.subheader("Contenuto Generato:")
-                    st.write(guide_content)
+        if guide_content:
+            st.subheader("Contenuto Generato:")
+            st.write(guide_content)
+        else:
+            st.error("Non è stato possibile generare l'articolo.")
 
-                    # Genera immagine
-                    if st.button("Genera Immagine"):
-                        image_url = generate_image_canva()
-                        if image_url:
-                            st.image(image_url, caption="Immagine Generata")
-
-                    # Pubblica articolo
-                    if st.button("Pubblica Articolo"):
-                        title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
-                        publish_to_wordpress(title, guide_content)
-
-# Avvia l'app Streamlit
+# Avvio dell'app Streamlit
 if __name__ == "__main__":
     main()
 

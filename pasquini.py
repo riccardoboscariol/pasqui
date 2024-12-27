@@ -1,18 +1,13 @@
 import streamlit as st
 import requests
+from requests.auth import HTTPBasicAuth
+import json
 
-# Configurazione API Claude
-claude_api_key = st.secrets["claude"]["api_key"]
+# Configurazione di Claude
+claude_api_key = st.secrets["claude"]["api_key"]  # La chiave API viene letta dai segreti
 
-# Funzione per generare un articolo con Claude 3.5 Sonnet
+# Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
-    url = "https://api.anthropic.com/v1/messages"  # Endpoint corretto
-    headers = {
-        "anthropic-api-key": claude_api_key,  # Chiave API corretta
-        "Content-Type": "application/json",
-    }
-
-    # Prompt per generare l'articolo
     prompt = (
         "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
@@ -26,29 +21,60 @@ def generate_article_claude():
         "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
     )
 
-    # Dati della richiesta
-    payload = {
-        "model": "claude-3-5-sonnet-20241022",  # Specifica il modello
-        "messages": [{"role": "user", "content": prompt}],
-        "max_tokens_to_sample": 4096,  # Imposta il limite di token
-        "temperature": 0.7,  # Controlla la creatività
+    try:
+        # Modificato per usare il modello corretto
+        response = requests.post(
+            "https://api.anthropic.com/v1/messages",  # Endpoint corretto per i messaggi
+            headers={
+                "anthropic-api-key": claude_api_key,  # Chiave API di Claude (header corretto)
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "claude-3-5-sonnet-20241022",  # Modello corretto
+                "max_tokens": 1024,
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+            },
+        )
+
+        if response.status_code == 200:
+            response_json = response.json()
+            return response_json.get("completion", "").strip()  # Estrai il testo generato
+        else:
+            st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
+            return None  # Restituisce None in caso di errore
+    except Exception as e:
+        st.error(f"Errore durante la generazione dell'articolo: {e}")
+        return None  # Restituisce None in caso di eccezione
+
+# Funzione per generare un'immagine con Canva API
+def generate_image_canva():
+    url = "https://api.canva.com/v1/images/generate"  # Endpoint di generazione immagine
+    headers = {
+        "Authorization": f"Bearer {st.secrets['canva']['api_key']}",
+        "Content-Type": "application/json",
+    }
+
+    data = {
+        "template_id": "TEMPLATE_ID",  # Sostituisci con un template ID valido di Canva
+        "variables": {
+            "title": "Guida Psicologica",
+            "content": "Immagine generata tramite l'API di Canva per l'articolo."
+        }
     }
 
     try:
-        # Invio della richiesta
-        response = requests.post(url, headers=headers, json=payload)
-
+        response = requests.post(url, headers=headers, json=data)
         if response.status_code == 200:
-            # Parsing della risposta
-            response_json = response.json()
-            completion = response_json.get("completion", "").strip()
-            return completion  # Restituisce il contenuto generato
+            image_url = response.json().get("image_url")
+            st.success("Immagine generata con successo!")
+            return image_url
         else:
-            # Gestione degli errori
-            st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
+            st.error(f"Errore nella generazione dell'immagine: {response.status_code} - {response.text}")
             return None
     except Exception as e:
-        st.error(f"Errore durante la generazione dell'articolo: {e}")
+        st.error(f"Errore durante la generazione dell'immagine: {e}")
         return None
 
 # Funzione per pubblicare l'articolo su WordPress
@@ -56,6 +82,7 @@ def publish_to_wordpress(title, content, image_url=None):
     wp_url = st.secrets["wordpress"]["url"].replace("xmlrpc.php", "wp-json/wp/v2/posts")
     wp_user = st.secrets["wordpress"]["username"]
     wp_password = st.secrets["wordpress"]["password"]
+    wp_auth = HTTPBasicAuth(wp_user, wp_password)
 
     post_data = {
         'title': title,
@@ -67,7 +94,7 @@ def publish_to_wordpress(title, content, image_url=None):
         post_data['featured_media'] = image_url  # Usa l'URL dell'immagine come copertura
 
     try:
-        response = requests.post(wp_url, json=post_data, auth=(wp_user, wp_password))
+        response = requests.post(wp_url, json=post_data, auth=wp_auth)
 
         if response.status_code == 201:
             st.success(f"Articolo '{title}' pubblicato con successo!")
@@ -78,7 +105,7 @@ def publish_to_wordpress(title, content, image_url=None):
 
 # Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
-    st.title("Generatore di Articoli con Claude 3.5 Sonnet")
+    st.title("Generatore di Articoli con Claude AI")
 
     # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
@@ -91,15 +118,21 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
+            # Pulsante per generare l'immagine con Canva
+            image_url = None
+            if st.button("Genera Immagine per Articolo"):
+                image_url = generate_image_canva()
+                if image_url:
+                    st.image(image_url, caption="Immagine Generata")
+
             # Pulsante per pubblicare l'articolo
             if st.button("Pubblica Articolo"):
                 title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
-                publish_to_wordpress(title, guide_content)
+                publish_to_wordpress(title, guide_content, image_url)
         else:
             st.error("Non è stato possibile generare l'articolo.")
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 

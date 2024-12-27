@@ -8,7 +8,7 @@ claude_api_key = st.secrets["claude"]["api_key"]
 def generate_article_claude():
     url = "https://api.anthropic.com/v1/messages"  # Endpoint corretto
     headers = {
-        "anthropic-api-key": claude_api_key,  # Header di autenticazione
+        "anthropic-api-key": claude_api_key,  # Chiave API corretta
         "Content-Type": "application/json",
     }
 
@@ -51,25 +51,55 @@ def generate_article_claude():
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return None
 
-# Funzione per la UI di Streamlit
+# Funzione per pubblicare l'articolo su WordPress
+def publish_to_wordpress(title, content, image_url=None):
+    wp_url = st.secrets["wordpress"]["url"].replace("xmlrpc.php", "wp-json/wp/v2/posts")
+    wp_user = st.secrets["wordpress"]["username"]
+    wp_password = st.secrets["wordpress"]["password"]
+
+    post_data = {
+        'title': title,
+        'content': content,
+        'status': 'publish',
+    }
+
+    if image_url:
+        post_data['featured_media'] = image_url  # Usa l'URL dell'immagine come copertura
+
+    try:
+        response = requests.post(wp_url, json=post_data, auth=(wp_user, wp_password))
+
+        if response.status_code == 201:
+            st.success(f"Articolo '{title}' pubblicato con successo!")
+        else:
+            st.error(f"Errore nella pubblicazione su WordPress: {response.status_code} - {response.text}")
+    except Exception as e:
+        st.error(f"Errore nella pubblicazione su WordPress: {e}")
+
+# Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
     st.title("Generatore di Articoli con Claude 3.5 Sonnet")
 
     # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
+        # Genera il contenuto tramite Claude AI
         guide_content = generate_article_claude()
 
         if guide_content:
+            # Mostra il contenuto generato
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
+
+            # Pulsante per pubblicare l'articolo
+            if st.button("Pubblica Articolo"):
+                title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
+                publish_to_wordpress(title, guide_content)
         else:
             st.error("Non è stato possibile generare l'articolo.")
 
-# Avvio dell'app Streamlit
+# Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
-
 
 

@@ -39,6 +39,10 @@ def generate_article_claude():
             },
         )
 
+        # Debugging: Stampa lo status code e il contenuto della risposta
+        st.write("Status Code:", response.status_code)
+        st.write("Response Text:", response.text)
+
         if response.status_code == 200:
             response_json = response.json()
             return response_json.get("completion", "").strip()  # Estrai il testo generato
@@ -136,5 +140,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 

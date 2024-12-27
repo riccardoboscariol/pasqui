@@ -22,11 +22,12 @@ def generate_article_claude():
     )
 
     try:
-        # Modificato per usare l'header 'x-api-key' come richiesto
+        # Modificato per includere l'header 'anthropic-version'
         response = requests.post(
             "https://api.anthropic.com/v1/messages",  # Endpoint corretto per i messaggi
             headers={
                 "x-api-key": claude_api_key,  # Chiave API di Claude (header corretto)
+                "anthropic-version": "2023-06-01",  # Versione dell'API di Claude
                 "Content-Type": "application/json",
             },
             json={

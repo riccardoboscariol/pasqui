@@ -22,11 +22,11 @@ def generate_article_claude():
     )
 
     try:
-        # Modificato per usare il modello corretto
+        # Modificato per usare l'header 'x-api-key' come richiesto
         response = requests.post(
             "https://api.anthropic.com/v1/messages",  # Endpoint corretto per i messaggi
             headers={
-                "anthropic-api-key": claude_api_key,  # Chiave API di Claude (header corretto)
+                "x-api-key": claude_api_key,  # Chiave API di Claude (header corretto)
                 "Content-Type": "application/json",
             },
             json={
@@ -135,4 +135,5 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 

@@ -3,9 +3,6 @@ import requests
 from requests.auth import HTTPBasicAuth
 import json
 
-# Configurazione di Claude
-claude_api_key = st.secrets["claude"]["api_key"]  # La chiave API viene letta dai segreti
-
 # Funzione per generare l'articolo con Claude AI
 def generate_article_claude():
     prompt = (
@@ -26,7 +23,7 @@ def generate_article_claude():
         response = requests.post(
             "https://api.anthropic.com/v1/messages",  # Endpoint corretto per i messaggi
             headers={
-                "x-api-key": claude_api_key,  # Chiave API di Claude (header corretto)
+                "x-api-key": st.secrets["claude"]["api_key"],  # Chiave API di Claude (header corretto)
                 "anthropic-version": "2023-06-01",  # Versione dell'API di Claude
                 "Content-Type": "application/json",
             },
@@ -44,8 +41,11 @@ def generate_article_claude():
         st.write("Response Text:", response.text)
 
         if response.status_code == 200:
+            # La risposta ora contiene una lista nel campo "content"
             response_json = response.json()
-            return response_json.get("completion", "").strip()  # Estrai il testo generato
+            # Estrai il contenuto dal campo "content" e unisci i vari pezzi di testo
+            content = " ".join([part['text'] for part in response_json.get('content', [])])
+            return content.strip()  # Restituisce il testo unito
         else:
             st.error(f"Errore nella risposta di Claude: {response.status_code} - {response.text}")
             return None  # Restituisce None in caso di errore

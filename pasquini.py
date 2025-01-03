@@ -44,9 +44,6 @@ def format_content_for_html(content):
     # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
     content = content.strip()  # Rimuove eventuali spazi o simboli all'inizio e alla fine
 
-    # Rimuoviamo eventuali simboli # tra i paragrafi
-    content = content.replace("#", "")  # Rimuoviamo tutti i simboli # non necessari
-
     # Formattiamo i titoli
     content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")  # Titolo grassetto e grande
 
@@ -148,7 +145,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 
 

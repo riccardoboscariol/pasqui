@@ -18,9 +18,9 @@ def generate_article_deepseek():
     )
 
     try:
-        # Chiamata all'API di DeepSeek
+        # Chiamata all'API di DeepSeek con l'endpoint beta
         response = requests.post(
-            "https://api.deepseek.com/v1/completions",  # Endpoint per completions di DeepSeek
+            "https://api.deepseek.com/beta/v1/completions",  # Endpoint beta per completions di DeepSeek
             headers={
                 "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",  # API Key DeepSeek
                 "Content-Type": "application/json",

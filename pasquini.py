@@ -3,12 +3,13 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 # Funzione per generare l'articolo con DeepSeek
-def generate_article_deepseek(prompt):
+def generate_article_deepseek(prompt, temperature=1.0):
     try:
         # Chiamata all'API di DeepSeek
         payload = {
             "model": "deepseek-chat",  # Modello DeepSeek V3
             "prompt": prompt,  # Usa il campo prompt per passare l'argomento
+            "temperature": temperature  # Aggiungi il parametro di temperatura
         }
 
         # Debugging: Stampa del corpo della richiesta per verificare la struttura
@@ -95,6 +96,15 @@ def main():
     # Casella di testo per l'inserimento opzionale di tematiche
     tema = st.text_input("Inserisci le tematiche di interesse (opzionale)", "")
 
+    # Slider per selezionare il parametro di temperatura
+    temperature = st.slider(
+        "Seleziona la temperatura del modello (0.0 per risposte precise, 1.5 per risposte creative)",
+        min_value=0.0,
+        max_value=1.5,
+        value=1.0,
+        step=0.1
+    )
+
     # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
@@ -115,7 +125,7 @@ def main():
             "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
             "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
             "Fai delle citazioni quando puoi, di studi, ricerche o libri e riportale in una bibliografia accurata e verificata alla fine dell'articolo."
-            "Come bibliografia trovami cinque libri italiani sulla tematica affrontata, usa come sorgente amazon.it, verifica autore, anno, edizione."
+            "Cerca anche se ci sono libri in italiano e citali in bibliografia. Controlla che siano esistenti su Amazon prima di citarli."
         )
 
         # Se l'utente inserisce una tematica, la includiamo nel prompt
@@ -123,7 +133,7 @@ def main():
             prompt += f" Le tematiche di interesse sono: {tema}."
 
         # Genera il contenuto tramite DeepSeek
-        guide_content = generate_article_deepseek(prompt)
+        guide_content = generate_article_deepseek(prompt, temperature)
 
         if guide_content:
             # Mostra il contenuto generato
@@ -145,5 +155,4 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 

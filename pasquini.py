@@ -27,10 +27,8 @@ def generate_article_deepseek():
             },
             json={
                 "model": "deepseek-chat",  # Modello DeepSeek V3
-                "messages": [
-                    {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": prompt}
-                ],
+                "prompt": prompt,  # Aggiungiamo il campo 'prompt'
+                "max_tokens": 1500,  # Imposta un limite di token per la risposta
             },
         )
 
@@ -40,7 +38,7 @@ def generate_article_deepseek():
 
         if response.status_code == 200:
             response_json = response.json()
-            content = response_json.get("choices", [])[0].get("message", {}).get("content", "")
+            content = response_json.get("choices", [])[0].get("text", "")  # Cambia 'message' con 'text'
             return content.strip()  # Restituisce il testo dell'articolo
         else:
             st.error(f"Errore nella risposta di DeepSeek: {response.status_code} - {response.text}")

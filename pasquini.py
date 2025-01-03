@@ -11,9 +11,6 @@ def generate_article_deepseek(prompt):
             "prompt": prompt,  # Usa il campo prompt per passare l'argomento
         }
 
-        # Debugging: Stampa del corpo della richiesta per verificare la struttura
-        st.write("Payload della richiesta:", payload)
-
         response = requests.post(
             "https://api.deepseek.com/beta/v1/completions",  # Endpoint per completions di DeepSeek
             headers={
@@ -23,15 +20,10 @@ def generate_article_deepseek(prompt):
             json=payload,
         )
 
-        # Debugging: Stampa lo status code e il contenuto della risposta
-        st.write("Status Code:", response.status_code)
-        st.write("Response Text:", response.text)
-
         if response.status_code == 200:
             response_json = response.json()
-            # Estrae il testo dalla risposta corretta
-            content = response_json.get("choices", [])[0].get("text", "").strip()  # Cambiato 'message' in 'text'
-            return content  # Restituisce il testo dell'articolo
+            content = response_json.get("choices", [])[0].get("text", "").strip()
+            return content
         else:
             st.error(f"Errore nella risposta di DeepSeek: {response.status_code} - {response.text}")
             return None
@@ -41,35 +33,33 @@ def generate_article_deepseek(prompt):
 
 # Funzione per formattare il testo in HTML (con titoli, grassetto, ecc.)
 def format_content_for_html(content):
-    # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
-    content = content.strip()  # Rimuove eventuali spazi o simboli all'inizio e alla fine
+    content = content.strip()
 
     # Formattiamo i titoli: sostituisce "# " con tag HTML per i titoli
-    content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")  # Titolo grassetto e grande
+    content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")
 
-    # Rimuoviamo eventuali "#" isolati (non seguiti da uno spazio)
-    lines = content.split("\n")  # Dividiamo il testo per linee
+    # Rimuoviamo eventuali "#" isolati alla fine dei paragrafi
+    lines = content.split("\n")
     cleaned_lines = []
     for line in lines:
         if line.strip().startswith("#"):  # Se una linea inizia con "#", è un titolo
             cleaned_lines.append(line)  # Manteniamo intatta
         else:
-            cleaned_lines.append(line.replace("#", ""))  # Rimuoviamo i "#" isolati
+            cleaned_lines.append(line.rstrip("#"))  # Rimuoviamo i "#" solo alla fine
 
-    # Ricombiniamo le linee
     content = "\n".join(cleaned_lines)
 
-    # Rimuoviamo le linee "---" dopo ogni paragrafo
+    # Rimuoviamo le linee "---"
     content = content.replace("---", "")
 
-    # Rimuoviamo i simboli "##" tra i paragrafi
+    # Rimuoviamo i simboli "##"
     content = content.replace("##", "")
 
     # Rimuoviamo il simbolo "*" per il grassetto
-    content = content.replace("**", "").replace("**", "")  # Rimuoviamo eventuale grassetto nel corpo del testo
+    content = content.replace("**", "")
 
     # Aggiungiamo paragrafi
-    content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")  # Paragrafi
+    content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")
 
     return content
 
@@ -80,19 +70,16 @@ def publish_to_wordpress(title, content):
     wp_password = st.secrets["wordpress"]["password"]
     wp_auth = HTTPBasicAuth(wp_user, wp_password)
 
-    # Formattiamo il contenuto con HTML
     formatted_content = format_content_for_html(content)
 
     post_data = {
         'title': title,
-        'content': formatted_content,  # Il contenuto formattato in HTML
-        'status': 'draft',  # Lo status è impostato su 'draft' per salvarlo come bozza
+        'content': formatted_content,
+        'status': 'draft',  # Salva come bozza
     }
 
     try:
         response = requests.post(wp_url, json=post_data, auth=wp_auth)
-        st.write("Risposta dall'API WordPress:", response.status_code, response.text)  # Log della risposta
-
         if response.status_code == 201:
             st.success("Articolo salvato come bozza su WordPress!")
         else:
@@ -104,14 +91,11 @@ def publish_to_wordpress(title, content):
 def main():
     st.title("Generatore di Articoli con DeepSeek")
 
-    # Casella di testo per l'inserimento opzionale di tematiche
     tema = st.text_input("Inserisci le tematiche di interesse (opzionale)", "")
 
-    # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
 
-        # Definisci il prompt esatto per generare circa 2000 parole
         prompt = (
             "Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo con questo stile: "
             "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
@@ -125,30 +109,25 @@ def main():
             "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici "
             "e che devono rivolgersi sempre a professionisti. "
             "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
-            "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
             "Fai delle citazioni quando puoi, di studi, ricerche o libri e riportale in una bibliografia accurata e verificata alla fine dell'articolo."
             "Cerca anche se ci sono libri in italiano e citali in bibliografia. Controlla che siano esistenti su Amazon prima di citarli."
         )
 
-        # Se l'utente inserisce una tematica, la includiamo nel prompt
         if tema:
             prompt += f" Le tematiche di interesse sono: {tema}."
 
-        # Genera il contenuto tramite DeepSeek
         guide_content = generate_article_deepseek(prompt)
 
         if guide_content:
-            # Mostra il contenuto generato
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Rimuove simbolo "#", virgolette e asterischi dal titolo
-            title = guide_content.split('\n')[0].strip("#").strip('"').replace("**", "").strip()
-            # Rimuovi le virgolette anche dal sottotitolo
-            subtitle = guide_content.split('\n')[1].strip().replace('"', '')
-            
-            # Rimuovere la prima frase ripetuta (nel caso sia una ripetizione del titolo)
-            guide_content = "\n".join(guide_content.split('\n')[2:])
+            # Estrai titolo e contenuto:
+            title_line = guide_content.split('\n')[0].strip().replace('"', '')  # Prima linea come titolo
+            title = title_line if title_line else "Titolo Mancante"
+
+            # Se la seconda linea è il sottotitolo, usala solo come contenuto
+            guide_content = "\n".join(guide_content.split('\n')[1:])
 
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
@@ -157,7 +136,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 
 

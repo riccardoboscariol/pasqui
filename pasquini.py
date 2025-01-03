@@ -95,14 +95,19 @@ def main():
         guide_content = generate_article_deepseek(prompt)
 
         if guide_content:
+            # Salva il contenuto generato nello stato della sessione
+            st.session_state.guide_content = guide_content
+            st.session_state.guide_title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
+
             # Mostra il contenuto generato
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
             # Pulsante per salvare come bozza su WordPress
             if st.button("Salva come Bozza"):
-                title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
-                success = publish_to_wordpress(title, guide_content, draft=True)  # Salva come bozza
+                title = st.session_state.guide_title
+                content = st.session_state.guide_content
+                success = publish_to_wordpress(title, content, draft=True)  # Salva come bozza
                 if success:
                     st.success("Articolo salvato come bozza su WordPress!")
                 else:
@@ -110,8 +115,9 @@ def main():
 
             # Pulsante per pubblicare l'articolo su WordPress
             if st.button("Pubblica Articolo"):
-                title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
-                success = publish_to_wordpress(title, guide_content, draft=False)  # Pubblica l'articolo
+                title = st.session_state.guide_title
+                content = st.session_state.guide_content
+                success = publish_to_wordpress(title, content, draft=False)  # Pubblica l'articolo
                 if success:
                     st.success(f"Articolo '{title}' pubblicato con successo!")
                 else:
@@ -121,6 +127,12 @@ def main():
 
 # Avvia l'app Streamlit
 if __name__ == "__main__":
+    # Inizializza la sessione per mantenere lo stato
+    if "guide_content" not in st.session_state:
+        st.session_state.guide_content = ""
+    if "guide_title" not in st.session_state:
+        st.session_state.guide_title = ""
+
     main()
 
 

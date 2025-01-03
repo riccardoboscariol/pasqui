@@ -22,13 +22,25 @@ def generate_article_deepseek(prompt):
         if response.status_code == 200:
             response_json = response.json()
             content = response_json.get("choices", [])[0].get("text", "").strip()
-            return content
+            return filter_relevant_content(content)
         else:
             st.error(f"Errore nella risposta di DeepSeek: {response.status_code} - {response.text}")
             return None
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return None
+
+# Funzione per filtrare contenuti non pertinenti
+def filter_relevant_content(content):
+    lines = content.split("\n")
+    filtered_lines = []
+
+    for line in lines:
+        if "come gestire" in line.lower():  # Esempio di filtro basato su parole chiave non pertinenti
+            continue
+        filtered_lines.append(line)
+
+    return "\n".join(filtered_lines)
 
 # Funzione per formattare il testo in HTML (con titoli, grassetto, ecc.)
 def format_content_for_html(content):
@@ -88,43 +100,19 @@ def main():
         st.write("Generazione della guida in corso...")
 
         prompt = (
-            "Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo con questo stile: "
-            "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
-            "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
-            "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
-            "per organizzare il contenuto, senza includere simboli inutili. "
-            "Vedi di non essere troppo semplicistico, comico o poco serio, bilancia ironia a informazione e professionalità."
-            "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili: "
-            "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), "
-            "Nature Human Behaviour. "
-            "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici "
-            "e che devono rivolgersi sempre a professionisti. "
-            "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
-            "Fai delle citazioni quando puoi, di studi, ricerche o libri e riportale in una bibliografia accurata e verificata alla fine dell'articolo."
-            "Cerca anche se ci sono libri in italiano e citali in bibliografia. Controlla che siano esistenti su Amazon prima di citarli."
+            f"Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo esperto. "
+            f"Focalizzati su questo argomento: {tema}. Includi consigli pratici, sottotitoli chiari e uno stile accessibile. "
+            f"Evita elenchi infiniti e rimani concentrato sul tema."
         )
 
-        if tema:
-            prompt += f" Le tematiche di interesse sono: {tema}."
+        content = generate_article_deepseek(prompt)
 
-        guide_content = generate_article_deepseek(prompt)
+        if content:
+            st.write(content)
 
-        if guide_content:
-            st.subheader("Contenuto Generato:")
-            st.write(guide_content)
+            if st.button("Pubblica come bozza su WordPress"):
+                publish_to_wordpress(tema, content)
 
-            # Estrai il titolo
-            first_line = guide_content.split("\n")[0].strip().replace("#", "").replace('"', '').strip()
-            title = first_line if first_line else "Titolo Mancante"
-
-            # Rimuovi la prima linea (titolo) dal contenuto
-            guide_content = "\n".join(guide_content.split("\n")[1:])
-
-            publish_to_wordpress(title, guide_content)  # Salva come bozza
-        else:
-            st.error("Non è stato possibile generare l'articolo.")
-
-# Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
 

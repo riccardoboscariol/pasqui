@@ -2,10 +2,9 @@ import streamlit as st
 import requests
 from requests.auth import HTTPBasicAuth
 
-# Funzione per generare l'articolo con DeepSeek V3
-def generate_article_deepseek(theme=None):
-    # Prompt base
-    base_prompt = (
+# Funzione per generare l'articolo con DeepSeek
+def generate_article_deepseek():
+    prompt = (
         "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
         "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
         "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
@@ -18,82 +17,82 @@ def generate_article_deepseek(theme=None):
         "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
     )
 
-    # Aggiungi la tematica al prompt, se specificata
-    if theme:
-        base_prompt += f" Concentrati sull'area tematica seguente: {theme}."
-
-    # Configura la richiesta a DeepSeek
-    url = "https://api.deepseek.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",
-        "Content-Type": "application/json",
-    }
-    data = {
-        "model": "deepseek-chat",  # Modello DeepSeek V3
-        "messages": [
-            {"role": "user", "content": base_prompt}
-        ],
-        "stream": False  # Risposta completa, non streaming
-    }
-
     try:
-        # Richiesta POST per generare l'articolo
-        response = requests.post(url, headers=headers, json=data)
-        
+        # Chiamata all'API di DeepSeek
+        response = requests.post(
+            "https://api.deepseek.com/v1/completions",  # Endpoint per completions di DeepSeek
+            headers={
+                "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",  # API Key DeepSeek
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "deepseek-chat",  # Modello DeepSeek V3
+                "messages": [
+                    {"role": "user", "content": prompt}
+                ],
+            },
+        )
+
+        # Debugging: Stampa lo status code e il contenuto della risposta
+        st.write("Status Code:", response.status_code)
+        st.write("Response Text:", response.text)
+
         if response.status_code == 200:
             response_json = response.json()
-            content = response_json["choices"][0]["message"]["content"]
-            return content.strip()
+            content = response_json.get("choices", [])[0].get("message", {}).get("content", "")
+            return content.strip()  # Restituisce il testo dell'articolo
         else:
-            st.error(f"Errore nella risposta DeepSeek: {response.status_code} - {response.text}")
+            st.error(f"Errore nella risposta di DeepSeek: {response.status_code} - {response.text}")
             return None
     except Exception as e:
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return None
 
-# Funzione per pubblicare l'articolo su WordPress come bozza
-def publish_to_wordpress(title, content, image_url=None):
+# Funzione per pubblicare o salvare come bozza su WordPress
+def publish_to_wordpress(title, content, draft=False):
     wp_url = st.secrets["wordpress"]["url"].replace("xmlrpc.php", "wp-json/wp/v2/posts")
     wp_user = st.secrets["wordpress"]["username"]
     wp_password = st.secrets["wordpress"]["password"]
     wp_auth = HTTPBasicAuth(wp_user, wp_password)
 
-    # Prepara i dati del post
+    # Cambia lo stato del post in base al parametro draft
     post_data = {
         'title': title,
         'content': content,
-        'status': 'draft',  # Salvato come bozza
+        'status': 'draft' if draft else 'publish',
     }
-
-    if image_url:
-        post_data['featured_media'] = image_url  # Aggiungi immagine, se presente
 
     try:
         response = requests.post(wp_url, json=post_data, auth=wp_auth)
-
-        # Debug per visualizzare i dettagli della richiesta
-        st.write("Dati inviati a WordPress:", post_data)
-        st.write("Stato della risposta:", response.status_code)
-        st.write("Risposta completa:", response.text)
+        st.write("Risposta dall'API WordPress:", response.status_code, response.text)  # Log della risposta
 
         if response.status_code == 201:
-            st.success(f"Articolo '{title}' salvato come bozza su WordPress!")
+            return True  # Articolo salvato con successo
         else:
             st.error(f"Errore nella pubblicazione su WordPress: {response.status_code} - {response.text}")
+            return False  # Errore nel salvataggio
     except Exception as e:
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
+        return False
 
-# Funzione principale per Streamlit
+# Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
-    st.title("Generatore di Articoli con DeepSeek V3")
-    
-    # Casella di testo per indicare un'area tematica opzionale
-    theme = st.text_input("Indica una tematica (opzionale)", value="")
-    
+    st.title("Generatore di Articoli con DeepSeek")
+
+    # Casella di testo per l'inserimento opzionale di tematiche
+    tema = st.text_input("Inserisci le tematiche di interesse (opzionale)", "")
+
     # Pulsante per generare l'articolo
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
-        guide_content = generate_article_deepseek(theme.strip() if theme else None)
+
+        # Modifica il prompt in base alla tematica inserita
+        prompt = "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con un tono professionale. "
+        if tema:
+            prompt += f"Le tematiche di interesse sono: {tema}. "
+
+        # Genera il contenuto tramite DeepSeek
+        guide_content = generate_article_deepseek()
 
         if guide_content:
             # Mostra il contenuto generato
@@ -101,9 +100,22 @@ def main():
             st.write(guide_content)
 
             # Pulsante per salvare come bozza su WordPress
-            if st.button("Salva come bozza su WordPress"):
-                title = guide_content.split('\n')[0]  # Usa la prima riga del contenuto come titolo
-                publish_to_wordpress(title, guide_content)
+            if st.button("Salva come Bozza"):
+                title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
+                success = publish_to_wordpress(title, guide_content, draft=True)  # Salva come bozza
+                if success:
+                    st.success("Articolo salvato come bozza su WordPress!")
+                else:
+                    st.error("Errore durante il salvataggio come bozza.")
+
+            # Pulsante per pubblicare l'articolo su WordPress
+            if st.button("Pubblica Articolo"):
+                title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
+                success = publish_to_wordpress(title, guide_content, draft=False)  # Pubblica l'articolo
+                if success:
+                    st.success(f"Articolo '{title}' pubblicato con successo!")
+                else:
+                    st.error(f"Errore durante la pubblicazione su WordPress.")
         else:
             st.error("Non è stato possibile generare l'articolo.")
 

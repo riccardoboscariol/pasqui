@@ -115,7 +115,7 @@ def main():
             "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
             "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
             "Fai delle citazioni quando puoi, di studi, ricerche o libri e riportale in una bibliografia accurata e verificata alla fine dell'articolo."
-            "Cerca anche se ci sono libri in italiano e citali in bibliografia."
+            "Cerca anche se ci sono libri in italiano e citali in bibliografia. Controlla che siano esistenti su Amazon prima di citarli."
         )
 
         # Se l'utente inserisce una tematica, la includiamo nel prompt

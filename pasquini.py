@@ -28,6 +28,7 @@ def generate_article_deepseek():
             json={
                 "model": "deepseek-chat",  # Modello DeepSeek V3
                 "messages": [
+                    {"role": "system", "content": "You are a helpful assistant"},
                     {"role": "user", "content": prompt}
                 ],
             },

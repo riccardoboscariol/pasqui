@@ -99,7 +99,7 @@ def main():
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
 
-        # Definisci il prompt esatto per generare circa 2000 parole
+        # Definisci il prompt esatto per generare circa 3000 parole
         prompt = (
             "Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo con questo stile: "
             "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "

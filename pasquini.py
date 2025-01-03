@@ -71,6 +71,11 @@ def publish_to_wordpress(title, content, image_url=None):
     try:
         response = requests.post(wp_url, json=post_data, auth=wp_auth)
 
+        # Debug per visualizzare i dettagli della richiesta
+        st.write("Dati inviati a WordPress:", post_data)
+        st.write("Stato della risposta:", response.status_code)
+        st.write("Risposta completa:", response.text)
+
         if response.status_code == 201:
             st.success(f"Articolo '{title}' salvato come bozza su WordPress!")
         else:

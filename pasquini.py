@@ -39,6 +39,14 @@ def generate_article_deepseek(prompt):
         st.error(f"Errore durante la generazione dell'articolo: {e}")
         return None
 
+# Funzione per formattare il testo in HTML (con titoli, grassetto, ecc.)
+def format_content_for_html(content):
+    # Aggiungiamo una formattazione base
+    content = content.replace("**", "<b>").replace("**", "</b>")  # Grassetto
+    content = content.replace("#", "<h2>").replace("\n", "</h2>\n")  # Titoli
+    content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")  # Paragrafi
+    return content
+
 # Funzione per pubblicare come bozza su WordPress
 def publish_to_wordpress(title, content):
     wp_url = "https://www.psicoo.it/wp-json/wp/v2/posts"  # Endpoint WordPress
@@ -46,9 +54,12 @@ def publish_to_wordpress(title, content):
     wp_password = st.secrets["wordpress"]["password"]
     wp_auth = HTTPBasicAuth(wp_user, wp_password)
 
+    # Formattiamo il contenuto con HTML
+    formatted_content = format_content_for_html(content)
+
     post_data = {
         'title': title,
-        'content': content,
+        'content': formatted_content,  # Il contenuto formattato in HTML
         'status': 'draft',  # Lo status è impostato su 'draft' per salvarlo come bozza
     }
 
@@ -111,5 +122,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 

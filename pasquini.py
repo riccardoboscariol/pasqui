@@ -101,7 +101,7 @@ def main():
 
         # Definisci il prompt esatto per generare circa 2000 parole
         prompt = (
-            "Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo con questo stile: "
+            "Scrivi una guida lunga almeno 2000 parole come se fossi uno psicologo con questo stile: "
             "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
             "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
             "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "

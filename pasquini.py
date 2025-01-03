@@ -99,7 +99,7 @@ def main():
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
 
-        # Definisci il prompt esatto per generare circa 3000 parole
+        # Definisci il prompt esatto per generare circa 2000 parole
         prompt = (
             "Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo con questo stile: "
             "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
@@ -131,13 +131,19 @@ def main():
             st.write(guide_content)
 
             # Rimuove simbolo "#", virgolette e asterischi dal titolo
-            title = guide_content.split('\n')[0].strip("#").strip('"').replace("**", "").strip()
-            # Rimuovi le virgolette anche dal sottotitolo
-            subtitle = guide_content.split('\n')[1].strip().replace('"', '')
-            
-            # Rimuovere la prima frase ripetuta (nel caso sia una ripetizione del titolo)
-            guide_content = "\n".join(guide_content.split('\n')[2:])
+            guide_lines = guide_content.split('\n')
 
+            # Controllo se il contenuto ha almeno due righe per evitare l'errore
+            if len(guide_lines) > 1:
+                title = guide_lines[0].strip("#").strip('"').replace("**", "").strip()
+                subtitle = guide_lines[1].strip().replace('"', '')
+                # Rimuovere la prima frase ripetuta (nel caso sia una ripetizione del titolo)
+                guide_content = "\n".join(guide_lines[2:])
+            else:
+                title = guide_lines[0].strip("#").strip('"').replace("**", "").strip()
+                subtitle = ""  # Se non c'è un sottotitolo, lasciamo vuoto
+
+            # Pubblica l'articolo come bozza su WordPress
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")
@@ -145,5 +151,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 

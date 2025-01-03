@@ -101,11 +101,12 @@ def main():
 
         # Definisci il prompt esatto per generare circa 2000 parole
         prompt = (
-            "Scrivi una guida lunga almeno 2000 parole come se fossi uno psicologo con questo stile: "
+            "Scrivi una guida lunga almeno 3000 parole come se fossi uno psicologo con questo stile: "
             "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
             "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
             "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
             "per organizzare il contenuto, senza includere simboli inutili. "
+            "Vedi di non essere troppo semplicistico, comico o poco serio, bilancia ironia a informazione e professionalità."
             "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili: "
             "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), "
             "Nature Human Behaviour. "
@@ -113,6 +114,7 @@ def main():
             "e che devono rivolgersi sempre a professionisti. "
             "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
             "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
+            "Fai delle citazioni quando puoi, di studi, ricerche o libri e riportale in una bibliografia accurata e verificata alla fine dell'articolo."
         )
 
         # Se l'utente inserisce una tematica, la includiamo nel prompt

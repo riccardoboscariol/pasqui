@@ -2,28 +2,6 @@ import requests
 import streamlit as st
 from requests.auth import HTTPBasicAuth
 
-# Funzione per generare l'articolo tramite DeepSeek (o altra API)
-def generate_article_deepseek(prompt):
-    # Questa funzione è simulata, sostituirla con il codice per chiamare DeepSeek o l'API pertinente.
-    # Per esempio, fare una richiesta POST per generare l'articolo basato sul prompt.
-    return "Sopravvivere alla Tossicodipendenza: Una Guida per Chi Vuole Cambiare (e per Chi Vuole Capire)\n" \
-           "Ah, la tossicodipendenza... Un argomento delicato e doloroso, che però merita di essere trattato con umanità e consapevolezza. " \
-           "Se sei qui, probabilmente hai già cercato mille soluzioni, chiesto a amici, visto video su YouTube... E ora, eccoci qui, a " \
-           "parlare di come rompere le catene della dipendenza con un pizzico di umorismo, una dose di consapevolezza e, perché no, anche " \
-           "una buona dose di autoironia. Partiamo!
-
-### **Perché la tossicodipendenza è così difficile da sconfiggere?**
-La tossicodipendenza non è solo una questione di dipendenza fisica. Oh no, è anche una questione mentale, psicologica, sociale. Ti senti intrappolato, come se non potessi fare un passo senza quella sostanza che ti dà una falsa sensazione di felicità. Ma non è tutto oro ciò che luccica, e fortunatamente... esistono modi per uscirne. È come quando provi a smettere di mangiare cibi spazzatura per un giorno, e poi ti trovi a guardare il pacchetto di patatine come se fosse la tua anima gemella. È una battaglia continua.
-
-### **Come affrontare il primo passo senza impazzire**
-Il primo passo è sempre il più difficile, lo sappiamo. Ma pensa a quanto sarà bello guardarti allo specchio tra qualche mese e dire: "Ce l'ho fatta". Non sei solo, e non devi farcela da solo. Chiedi aiuto a un professionista, partecipa a gruppi di sostegno, e soprattutto, impara a ridere di te stesso. Non c’è nulla di male nel fare qualche errore lungo la strada. La vita è fatta di imperfezioni e di ripartenze. Non esiste il piano perfetto, ma esiste il piano giusto per te.
-
-### **Resistere alla tentazione: come non cedere alla voglia di ricadere**
-Resistere alla tentazione di ricadere nella vecchia abitudine è difficile, ma non impossibile. Ogni giorno senza la sostanza che ti teneva prigioniero è una vittoria. Ogni piccolo passo conta. Pensa a tutto quello che hai conquistato fino a oggi, anche se ti sembra poco. Fai una lista delle cose che hai ottenuto senza quella "scorciatoia", e quando la voglia di ricadere si fa sentire, leggila. La tua forza sta proprio nel sapere che ogni piccola vittoria è un grande passo verso la libertà.
-
-### **Disclaimer**
-Questa guida è pensata per scopi informativi e di intrattenimento. Non sostituisce il parere di un professionista della salute mentale. Se stai affrontando difficoltà psicologiche, ti consiglio di rivolgerti a uno psicologo o a un esperto qualificato. Ricorda: i social media sono uno strumento, non una misura del tuo valore."
-
 # Funzione per formattare il contenuto in HTML (con titoli, grassetto, ecc.)
 def format_content_for_html(content):
     # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette

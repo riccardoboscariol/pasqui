@@ -3,20 +3,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 
 # Funzione per generare l'articolo con DeepSeek
-def generate_article_deepseek():
-    prompt = (
-        "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
-        "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
-        "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
-        "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
-        "per organizzare il contenuto, senza includere simboli inutili. "
-        "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili: "
-        "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. "
-        "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
-        "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
-        "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
-    )
-
+def generate_article_deepseek(prompt):
     try:
         # Chiamata all'API di DeepSeek con l'endpoint beta
         response = requests.post(
@@ -86,12 +73,25 @@ def main():
         st.write("Generazione della guida in corso...")
 
         # Modifica il prompt in base alla tematica inserita
-        prompt = "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con un tono professionale. "
+        prompt = (
+            "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+            "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
+            "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
+            "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
+            "per organizzare il contenuto, senza includere simboli inutili. "
+            "Basa la scelta dell'argomento in base agli ultimi articoli di queste fonti affidabili: "
+            "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. "
+            "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
+            "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
+            "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
+        )
+
+        # Aggiungi la tematica se è presente
         if tema:
-            prompt += f"Le tematiche di interesse sono: {tema}. "
+            prompt += f" Le tematiche di interesse sono: {tema}."
 
         # Genera il contenuto tramite DeepSeek
-        guide_content = generate_article_deepseek()
+        guide_content = generate_article_deepseek(prompt)
 
         if guide_content:
             # Mostra il contenuto generato

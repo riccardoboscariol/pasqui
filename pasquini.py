@@ -21,10 +21,7 @@ def generate_article_deepseek():
         # Chiamata all'API di DeepSeek
         payload = {
             "model": "deepseek-chat",  # Modello DeepSeek V3
-            "messages": [
-                {"role": "system", "content": "You are a helpful assistant"},
-                {"role": "user", "content": prompt}
-            ],
+            "prompt": prompt,  # Usa il campo prompt invece di messages
         }
 
         # Debugging: Stampa del corpo della richiesta per verificare la struttura

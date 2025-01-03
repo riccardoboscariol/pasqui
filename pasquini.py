@@ -44,8 +44,20 @@ def format_content_for_html(content):
     # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
     content = content.strip()  # Rimuove eventuali spazi o simboli all'inizio e alla fine
 
-    # Formattiamo i titoli
+    # Formattiamo i titoli: sostituisce "# " con tag HTML per i titoli
     content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")  # Titolo grassetto e grande
+
+    # Rimuoviamo eventuali "#" isolati (non seguiti da uno spazio)
+    lines = content.split("\n")  # Dividiamo il testo per linee
+    cleaned_lines = []
+    for line in lines:
+        if line.strip().startswith("#"):  # Se una linea inizia con "#", è un titolo
+            cleaned_lines.append(line)  # Manteniamo intatta
+        else:
+            cleaned_lines.append(line.replace("#", ""))  # Rimuoviamo i "#" isolati
+
+    # Ricombiniamo le linee
+    content = "\n".join(cleaned_lines)
 
     # Rimuoviamo le linee "---" dopo ogni paragrafo
     content = content.replace("---", "")
@@ -145,6 +157,7 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 
 

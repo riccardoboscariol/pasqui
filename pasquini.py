@@ -1,55 +1,50 @@
-import streamlit as st
 import requests
+import streamlit as st
 from requests.auth import HTTPBasicAuth
 
-# Funzione per generare l'articolo con DeepSeek
+# Funzione per generare l'articolo tramite DeepSeek (o altra API)
 def generate_article_deepseek(prompt):
-    try:
-        # Chiamata all'API di DeepSeek
-        payload = {
-            "model": "deepseek-chat",  # Modello DeepSeek V3
-            "prompt": prompt,  # Usa il campo prompt per passare l'argomento
-        }
+    # Questa funzione è simulata, sostituirla con il codice per chiamare DeepSeek o l'API pertinente.
+    # Per esempio, fare una richiesta POST per generare l'articolo basato sul prompt.
+    return "Sopravvivere alla Tossicodipendenza: Una Guida per Chi Vuole Cambiare (e per Chi Vuole Capire)\n" \
+           "Ah, la tossicodipendenza... Un argomento delicato e doloroso, che però merita di essere trattato con umanità e consapevolezza. " \
+           "Se sei qui, probabilmente hai già cercato mille soluzioni, chiesto a amici, visto video su YouTube... E ora, eccoci qui, a " \
+           "parlare di come rompere le catene della dipendenza con un pizzico di umorismo, una dose di consapevolezza e, perché no, anche " \
+           "una buona dose di autoironia. Partiamo!
 
-        # Debugging: Stampa del corpo della richiesta per verificare la struttura
-        st.write("Payload della richiesta:", payload)
+### **Perché la tossicodipendenza è così difficile da sconfiggere?**
+La tossicodipendenza non è solo una questione di dipendenza fisica. Oh no, è anche una questione mentale, psicologica, sociale. Ti senti intrappolato, come se non potessi fare un passo senza quella sostanza che ti dà una falsa sensazione di felicità. Ma non è tutto oro ciò che luccica, e fortunatamente... esistono modi per uscirne. È come quando provi a smettere di mangiare cibi spazzatura per un giorno, e poi ti trovi a guardare il pacchetto di patatine come se fosse la tua anima gemella. È una battaglia continua.
 
-        response = requests.post(
-            "https://api.deepseek.com/beta/v1/completions",  # Endpoint per completions di DeepSeek
-            headers={
-                "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",  # API Key DeepSeek
-                "Content-Type": "application/json",
-            },
-            json=payload,
-        )
+### **Come affrontare il primo passo senza impazzire**
+Il primo passo è sempre il più difficile, lo sappiamo. Ma pensa a quanto sarà bello guardarti allo specchio tra qualche mese e dire: "Ce l'ho fatta". Non sei solo, e non devi farcela da solo. Chiedi aiuto a un professionista, partecipa a gruppi di sostegno, e soprattutto, impara a ridere di te stesso. Non c’è nulla di male nel fare qualche errore lungo la strada. La vita è fatta di imperfezioni e di ripartenze. Non esiste il piano perfetto, ma esiste il piano giusto per te.
 
-        # Debugging: Stampa lo status code e il contenuto della risposta
-        st.write("Status Code:", response.status_code)
-        st.write("Response Text:", response.text)
+### **Resistere alla tentazione: come non cedere alla voglia di ricadere**
+Resistere alla tentazione di ricadere nella vecchia abitudine è difficile, ma non impossibile. Ogni giorno senza la sostanza che ti teneva prigioniero è una vittoria. Ogni piccolo passo conta. Pensa a tutto quello che hai conquistato fino a oggi, anche se ti sembra poco. Fai una lista delle cose che hai ottenuto senza quella "scorciatoia", e quando la voglia di ricadere si fa sentire, leggila. La tua forza sta proprio nel sapere che ogni piccola vittoria è un grande passo verso la libertà.
 
-        if response.status_code == 200:
-            response_json = response.json()
-            # Estrae il testo dalla risposta corretta
-            content = response_json.get("choices", [])[0].get("text", "").strip()  # Cambiato 'message' in 'text'
-            return content  # Restituisce il testo dell'articolo
-        else:
-            st.error(f"Errore nella risposta di DeepSeek: {response.status_code} - {response.text}")
-            return None
-    except Exception as e:
-        st.error(f"Errore durante la generazione dell'articolo: {e}")
-        return None
+### **Disclaimer**
+Questa guida è pensata per scopi informativi e di intrattenimento. Non sostituisce il parere di un professionista della salute mentale. Se stai affrontando difficoltà psicologiche, ti consiglio di rivolgerti a uno psicologo o a un esperto qualificato. Ricorda: i social media sono uno strumento, non una misura del tuo valore."
 
-# Funzione per formattare il testo in HTML (con titoli, grassetto, ecc.)
+# Funzione per formattare il contenuto in HTML (con titoli, grassetto, ecc.)
 def format_content_for_html(content):
     # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
-    content = content.strip("#").strip()  # Rimuove il simbolo "#" dal titolo e gli spazi extra
-    
-    # Aggiungiamo una formattazione base
-    content = content.replace("**", "<b>").replace("**", "</b>")  # Grassetto
-    content = content.replace("#", "<h2>").replace("\n", "</h2>\n")  # Titoli
+    content = content.strip()  # Rimuove eventuali spazi o simboli all'inizio e alla fine
+
+    # Formattiamo i titoli
+    content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")  # Titolo grassetto e grande
+
+    # Formattiamo il testo del corpo (senza grassetto)
+    content = content.replace("**", "").replace("**", "")  # Rimuoviamo eventuale grassetto nel corpo del testo
+
+    # Aggiungiamo paragrafi
     content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")  # Paragrafi
-    
+
     return content
+
+# Estrazione del titolo senza simboli
+def extract_title(content):
+    # Estrai il primo paragrafo come titolo e rimuovi simboli come #, virgolette e grassetto
+    title_line = content.split('\n')[0].strip("#").strip().replace('"', '').replace('**', '')
+    return title_line
 
 # Funzione per pubblicare come bozza su WordPress
 def publish_to_wordpress(title, content):
@@ -78,7 +73,7 @@ def publish_to_wordpress(title, content):
     except Exception as e:
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
-# Streamlit UI per la generazione e pubblicazione dell'articolo
+# Funzione principale
 def main():
     st.title("Generatore di Articoli con DeepSeek")
 
@@ -113,12 +108,12 @@ def main():
         guide_content = generate_article_deepseek(prompt)
 
         if guide_content:
-            # Mostra il contenuto generato
+            # Estrai il titolo senza simboli
+            title = extract_title(guide_content)
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Rimuove virgolette e simbolo "#" dal titolo
-            title = guide_content.split('\n')[0].strip("#").strip('"')  # Modifica per rimuovere simbolo e virgolette
+            # Pubblica il contenuto come bozza su WordPress
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")
@@ -126,4 +121,5 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 

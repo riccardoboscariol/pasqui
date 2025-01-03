@@ -83,7 +83,8 @@ def main():
             "Psychology Today (sezione Latest), Science Daily (sezione Mind & Brain), American Psychological Association (sezione News), Nature Human Behaviour. "
             "Alla fine scrivi un disclaimer in cui spieghi che la guida non ha nessuna finalità nel fornire consigli psicologici o scientifici e che devono rivolgersi sempre a professionisti. "
             "Il titolo dovrai pensarlo sulla base dei contenuti generati e dovrà essere accattivante. "
-            "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida."
+            "Inizialmente non devi scrivere ecco a te il contenuto. Parti subito con la guida. "
+            "Scrivi tutto in italiano."  # Aggiungi la frase per forzare l'italiano
         )
 
         # Aggiungi la tematica se è presente
@@ -121,5 +122,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 

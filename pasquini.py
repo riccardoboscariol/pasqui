@@ -5,16 +5,15 @@ from requests.auth import HTTPBasicAuth
 # Funzione per generare l'articolo con DeepSeek
 def generate_article_deepseek(prompt):
     try:
-        # Chiamata all'API di DeepSeek
         payload = {
-            "model": "deepseek-chat",  # Modello DeepSeek V3
-            "prompt": prompt,  # Usa il campo prompt per passare l'argomento
+            "model": "deepseek-chat",
+            "prompt": prompt,
         }
 
         response = requests.post(
-            "https://api.deepseek.com/beta/v1/completions",  # Endpoint per completions di DeepSeek
+            "https://api.deepseek.com/beta/v1/completions",
             headers={
-                "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",  # API Key DeepSeek
+                "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",
                 "Content-Type": "application/json",
             },
             json=payload,
@@ -35,37 +34,29 @@ def generate_article_deepseek(prompt):
 def format_content_for_html(content):
     content = content.strip()
 
-    # Formattiamo i titoli: sostituisce "# " con tag HTML per i titoli
-    content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")
-
-    # Rimuoviamo eventuali "#" isolati alla fine dei paragrafi
+    # Gestione dei simboli # nei titoli
     lines = content.split("\n")
-    cleaned_lines = []
+    formatted_lines = []
+
     for line in lines:
-        if line.strip().startswith("#"):  # Se una linea inizia con "#", è un titolo
-            cleaned_lines.append(line)  # Manteniamo intatta
-        else:
-            cleaned_lines.append(line.rstrip("#"))  # Rimuoviamo i "#" solo alla fine
+        if line.startswith("# "):  # Titoli principali
+            line = line.replace("# ", "<h2><b>").strip() + "</b></h2>"
+        elif line.startswith("## "):  # Sottotitoli
+            line = line.replace("## ", "<h3>").strip() + "</h3>"
+        elif line.startswith("### "):  # Sotto-sottotitoli
+            line = line.replace("### ", "<h4>").strip() + "</h4>"
+        else:  # Paragrafi normali
+            line = line.rstrip("#")  # Rimuove simboli # isolati alla fine
+            line = f"<p>{line.strip()}</p>"
 
-    content = "\n".join(cleaned_lines)
+        formatted_lines.append(line)
 
-    # Rimuoviamo le linee "---"
-    content = content.replace("---", "")
-
-    # Rimuoviamo i simboli "##"
-    content = content.replace("##", "")
-
-    # Rimuoviamo il simbolo "*" per il grassetto
-    content = content.replace("**", "")
-
-    # Aggiungiamo paragrafi
-    content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")
-
+    content = "\n".join(formatted_lines)
     return content
 
 # Funzione per pubblicare come bozza su WordPress
 def publish_to_wordpress(title, content):
-    wp_url = "https://www.psicoo.it/wp-json/wp/v2/posts"  # Endpoint WordPress
+    wp_url = "https://www.psicoo.it/wp-json/wp/v2/posts"
     wp_user = st.secrets["wordpress"]["username"]
     wp_password = st.secrets["wordpress"]["password"]
     wp_auth = HTTPBasicAuth(wp_user, wp_password)
@@ -75,7 +66,7 @@ def publish_to_wordpress(title, content):
     post_data = {
         'title': title,
         'content': formatted_content,
-        'status': 'draft',  # Salva come bozza
+        'status': 'draft',
     }
 
     try:
@@ -122,12 +113,12 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Estrai titolo e contenuto:
-            title_line = guide_content.split('\n')[0].strip().replace('"', '')  # Prima linea come titolo
-            title = title_line if title_line else "Titolo Mancante"
+            # Estrai il titolo
+            first_line = guide_content.split("\n")[0].strip().replace("#", "").replace('"', '').strip()
+            title = first_line if first_line else "Titolo Mancante"
 
-            # Se la seconda linea è il sottotitolo, usala solo come contenuto
-            guide_content = "\n".join(guide_content.split('\n')[1:])
+            # Rimuovi la prima linea (titolo) dal contenuto
+            guide_content = "\n".join(guide_content.split("\n")[1:])
 
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
@@ -136,6 +127,5 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 

@@ -50,7 +50,10 @@ def format_content_for_html(content):
     # Rimuoviamo le linee "---" dopo ogni paragrafo
     content = content.replace("---", "")
 
-    # Formattiamo il testo del corpo (senza grassetto)
+    # Rimuoviamo i simboli "##" tra i paragrafi
+    content = content.replace("##", "")
+
+    # Rimuoviamo il simbolo "*" per il grassetto
     content = content.replace("**", "").replace("**", "")  # Rimuoviamo eventuale grassetto nel corpo del testo
 
     # Aggiungiamo paragrafi
@@ -96,9 +99,9 @@ def main():
     if st.button("Genera Articolo"):
         st.write("Generazione della guida in corso...")
 
-        # Definisci il prompt esatto
+        # Definisci il prompt esatto per generare circa 2000 parole
         prompt = (
-            "Scrivi una guida di almeno 1000 parole come se fossi uno psicologo con questo stile: "
+            "Scrivi una guida lunga almeno 2000 parole come se fossi uno psicologo con questo stile: "
             "Un tono leggero ma professionale, l'uso di ironia e humor, esempi concreti mescolati con battute, "
             "un approccio anticonvenzionale ma informato, la prospettiva in prima persona, metafore divertenti ma pertinenti, "
             "empatia e calore umano. Usa paragrafi chiari, titoli e sottotitoli (con grassetti, sottolineature, caratteri di dimensione maggiore) "
@@ -128,6 +131,10 @@ def main():
             title = guide_content.split('\n')[0].strip("#").strip('"').replace("**", "").strip()
             # Rimuovi le virgolette anche dal sottotitolo
             subtitle = guide_content.split('\n')[1].strip().replace('"', '')
+            
+            # Rimuovere la prima frase ripetuta (nel caso sia una ripetizione del titolo)
+            guide_content = "\n".join(guide_content.split('\n')[2:])
+
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")

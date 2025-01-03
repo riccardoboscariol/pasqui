@@ -1,8 +1,45 @@
-import requests
 import streamlit as st
+import requests
 from requests.auth import HTTPBasicAuth
 
-# Funzione per formattare il contenuto in HTML (con titoli, grassetto, ecc.)
+# Funzione per generare l'articolo con DeepSeek
+def generate_article_deepseek(prompt):
+    try:
+        # Chiamata all'API di DeepSeek
+        payload = {
+            "model": "deepseek-chat",  # Modello DeepSeek V3
+            "prompt": prompt,  # Usa il campo prompt per passare l'argomento
+        }
+
+        # Debugging: Stampa del corpo della richiesta per verificare la struttura
+        st.write("Payload della richiesta:", payload)
+
+        response = requests.post(
+            "https://api.deepseek.com/beta/v1/completions",  # Endpoint per completions di DeepSeek
+            headers={
+                "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",  # API Key DeepSeek
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+
+        # Debugging: Stampa lo status code e il contenuto della risposta
+        st.write("Status Code:", response.status_code)
+        st.write("Response Text:", response.text)
+
+        if response.status_code == 200:
+            response_json = response.json()
+            # Estrae il testo dalla risposta corretta
+            content = response_json.get("choices", [])[0].get("text", "").strip()  # Cambiato 'message' in 'text'
+            return content  # Restituisce il testo dell'articolo
+        else:
+            st.error(f"Errore nella risposta di DeepSeek: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        st.error(f"Errore durante la generazione dell'articolo: {e}")
+        return None
+
+# Funzione per formattare il testo in HTML (con titoli, grassetto, ecc.)
 def format_content_for_html(content):
     # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
     content = content.strip()  # Rimuove eventuali spazi o simboli all'inizio e alla fine
@@ -17,12 +54,6 @@ def format_content_for_html(content):
     content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")  # Paragrafi
 
     return content
-
-# Estrazione del titolo senza simboli
-def extract_title(content):
-    # Estrai il primo paragrafo come titolo e rimuovi simboli come #, virgolette e grassetto
-    title_line = content.split('\n')[0].strip("#").strip().replace('"', '').replace('**', '')
-    return title_line
 
 # Funzione per pubblicare come bozza su WordPress
 def publish_to_wordpress(title, content):
@@ -51,7 +82,7 @@ def publish_to_wordpress(title, content):
     except Exception as e:
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
 
-# Funzione principale
+# Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
     st.title("Generatore di Articoli con DeepSeek")
 
@@ -86,12 +117,12 @@ def main():
         guide_content = generate_article_deepseek(prompt)
 
         if guide_content:
-            # Estrai il titolo senza simboli
-            title = extract_title(guide_content)
+            # Mostra il contenuto generato
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Pubblica il contenuto come bozza su WordPress
+            # Rimuove simbolo "#", virgolette e asterischi dal titolo
+            title = guide_content.split('\n')[0].strip("#").strip('"').replace("**", "").strip()
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")

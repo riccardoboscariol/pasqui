@@ -19,19 +19,24 @@ def generate_article_deepseek():
 
     try:
         # Chiamata all'API di DeepSeek
+        payload = {
+            "model": "deepseek-chat",  # Modello DeepSeek V3
+            "messages": [
+                {"role": "system", "content": "You are a helpful assistant"},
+                {"role": "user", "content": prompt}
+            ],
+        }
+
+        # Debugging: Stampa del corpo della richiesta per verificare la struttura
+        st.write("Payload della richiesta:", payload)
+
         response = requests.post(
             "https://api.deepseek.com/beta/v1/completions",  # Endpoint per completions di DeepSeek
             headers={
                 "Authorization": f"Bearer {st.secrets['deepseek']['api_key']}",  # API Key DeepSeek
                 "Content-Type": "application/json",
             },
-            json={
-                "model": "deepseek-chat",  # Modello DeepSeek V3
-                "messages": [
-                    {"role": "system", "content": "You are a helpful assistant"},
-                    {"role": "user", "content": prompt}
-                ],
-            },
+            json=payload,
         )
 
         # Debugging: Stampa lo status code e il contenuto della risposta
@@ -106,5 +111,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
+
 
 

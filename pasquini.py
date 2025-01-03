@@ -53,9 +53,6 @@ def format_content_for_html(content):
     # Rimuoviamo i simboli "##" tra i paragrafi
     content = content.replace("##", "")
 
-    # Rimuoviamo eventuali "#" che restano isolati nel contenuto
-    content = content.replace("#", "")  # Rimuove simboli # superflui
-
     # Rimuoviamo il simbolo "*" per il grassetto
     content = content.replace("**", "").replace("**", "")  # Rimuoviamo eventuale grassetto nel corpo del testo
 

@@ -44,17 +44,11 @@ def format_content_for_html(content):
     # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
     content = content.strip()  # Rimuove eventuali spazi o simboli all'inizio e alla fine
 
-    # Formattiamo i titoli
+    # Rimuoviamo il simbolo "#" e formattiamo il titolo
     content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")  # Titolo grassetto e grande
 
-    # Rimuoviamo le linee "---" dopo ogni paragrafo
-    content = content.replace("---", "")
-
-    # Rimuoviamo i simboli "##" tra i paragrafi
-    content = content.replace("##", "")
-
-    # Rimuoviamo il simbolo "*" per il grassetto
-    content = content.replace("**", "").replace("**", "")  # Rimuoviamo eventuale grassetto nel corpo del testo
+    # Rimuoviamo i simboli di markdown (ad esempio per i titoli)
+    content = content.replace("#", "").replace("##", "").replace("**", "")  # Rimuove simboli come # e **
 
     # Aggiungiamo paragrafi
     content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")  # Paragrafi
@@ -87,6 +81,15 @@ def publish_to_wordpress(title, content):
             st.error(f"Errore nella pubblicazione su WordPress: {response.status_code} - {response.text}")
     except Exception as e:
         st.error(f"Errore durante la pubblicazione su WordPress: {e}")
+
+# Funzione per verificare i libri citati (approccio semplice)
+def check_books_in_bibliography(content):
+    # Cerca se ci sono titoli fittizi nei libri
+    fake_books = ["Titolo Fittizio 1", "Titolo Inventato 2"]  # Aggiungi altri titoli fittizi noti
+    for book in fake_books:
+        if book in content:
+            st.warning(f"Attenzione: il libro '{book}' sembra essere inventato o inesistente. Verifica!")
+    return content
 
 # Streamlit UI per la generazione e pubblicazione dell'articolo
 def main():
@@ -138,6 +141,10 @@ def main():
             # Rimuovere la prima frase ripetuta (nel caso sia una ripetizione del titolo)
             guide_content = "\n".join(guide_content.split('\n')[2:])
 
+            # Verifica i libri nella bibliografia
+            guide_content = check_books_in_bibliography(guide_content)
+
+            # Pubblica come bozza
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")
@@ -145,7 +152,6 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
 
 
 

@@ -47,6 +47,9 @@ def format_content_for_html(content):
     # Formattiamo i titoli
     content = content.replace("# ", "<h2><b>").replace("\n", "</b></h2>\n")  # Titolo grassetto e grande
 
+    # Rimuoviamo le linee "---" dopo ogni paragrafo
+    content = content.replace("---", "")
+
     # Formattiamo il testo del corpo (senza grassetto)
     content = content.replace("**", "").replace("**", "")  # Rimuoviamo eventuale grassetto nel corpo del testo
 
@@ -123,6 +126,8 @@ def main():
 
             # Rimuove simbolo "#", virgolette e asterischi dal titolo
             title = guide_content.split('\n')[0].strip("#").strip('"').replace("**", "").strip()
+            # Rimuovi le virgolette anche dal sottotitolo
+            subtitle = guide_content.split('\n')[1].strip().replace('"', '')
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")

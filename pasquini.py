@@ -41,10 +41,14 @@ def generate_article_deepseek(prompt):
 
 # Funzione per formattare il testo in HTML (con titoli, grassetto, ecc.)
 def format_content_for_html(content):
+    # Rimuoviamo simboli non necessari dal titolo (es. "#") e virgolette
+    content = content.strip("#").strip()  # Rimuove il simbolo "#" dal titolo e gli spazi extra
+    
     # Aggiungiamo una formattazione base
     content = content.replace("**", "<b>").replace("**", "</b>")  # Grassetto
     content = content.replace("#", "<h2>").replace("\n", "</h2>\n")  # Titoli
     content = content.replace("\n", "<p>").replace("</p>\n", "</p>\n")  # Paragrafi
+    
     return content
 
 # Funzione per pubblicare come bozza su WordPress
@@ -113,8 +117,8 @@ def main():
             st.subheader("Contenuto Generato:")
             st.write(guide_content)
 
-            # Salva automaticamente come bozza su WordPress
-            title = guide_content.split('\n')[0]  # Usa la prima riga come titolo
+            # Rimuove virgolette e simbolo "#" dal titolo
+            title = guide_content.split('\n')[0].strip("#").strip('"')  # Modifica per rimuovere simbolo e virgolette
             publish_to_wordpress(title, guide_content)  # Salva come bozza
         else:
             st.error("Non è stato possibile generare l'articolo.")
@@ -122,6 +126,4 @@ def main():
 # Avvia l'app Streamlit
 if __name__ == "__main__":
     main()
-
-
 
